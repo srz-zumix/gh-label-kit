@@ -23,3 +23,8 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
+func init() {
+	rootCmd.AddCommand(NewCopyCmd())
+	rootCmd.AddCommand(NewListCmd())
+}
