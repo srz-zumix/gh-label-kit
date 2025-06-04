@@ -35,7 +35,7 @@
 ## コーディング規約
 
 * fmt.Errorf: error strings should not end with punctuation or newlines (ST1005) go-staticcheck
-* ローカルパッケージは github.com/srz-zumix/gh-team-kit/<path/to/dir> で import
+* ローカルパッケージは github.com/srz-zumix/gh-label-kit/<path/to/dir> で import
 
 ### ソースコード全般
 
