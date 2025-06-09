@@ -25,6 +25,4 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(NewCopyCmd())
-	rootCmd.AddCommand(NewListCmd())
 }

@@ -1,4 +1,4 @@
-package cmd
+package repo
 
 import (
 	"context"
@@ -47,8 +47,9 @@ func NewCopyCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
-	cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite existing labels in the destination repository")
+	f := cmd.Flags()
+	f.StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
+	f.BoolVarP(&force, "force", "f", false, "Overwrite existing labels in the destination repository")
 
 	return cmd
 }

@@ -1,4 +1,4 @@
-package cmd
+package repo
 
 import (
 	"context"
@@ -46,8 +46,9 @@ func NewListCmd() *cobra.Command {
 		},
 	}
 
+	f := cmd.Flags()
 	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", "auto", []string{"always", "never", "auto"}, "Use color in diff output")
-	cmd.Flags().StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
+	f.StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
 	return cmd
