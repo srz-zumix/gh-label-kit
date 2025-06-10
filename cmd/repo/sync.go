@@ -10,6 +10,7 @@ import (
 )
 
 func NewSyncCmd() *cobra.Command {
+	var force bool
 	var repo string
 
 	cmd := &cobra.Command{
@@ -35,7 +36,7 @@ func NewSyncCmd() *cobra.Command {
 				if src.Host != dst.Host {
 					return fmt.Errorf("source and destination repositories must be on the same host: %s vs %s", src.Host, dst.Host)
 				}
-				if err := gh.SyncLabels(ctx, client, src, dst); err != nil {
+				if err := gh.SyncLabels(ctx, client, src, dst, force); err != nil {
 					return fmt.Errorf("failed to sync labels to %s: %w", dstArg, err)
 				}
 				fmt.Printf("Successfully synced labels from %s to %s\n", args[0], dstArg)
@@ -45,6 +46,7 @@ func NewSyncCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
+	f.BoolVarP(&force, "force", "f", false, "Overwrite existing labels in the destination repository")
 	f.StringVarP(&repo, "repo", "R", "", "The repository in the format 'owner/repo'")
 
 	return cmd
