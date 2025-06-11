@@ -31,23 +31,25 @@ type StringOrSliceRaw any
 type StringOrSlice []string
 
 func (s *StringOrSlice) UnmarshalYAML(value *yaml.Node) error {
-	if value.Kind == yaml.ScalarNode {
+	switch value.Kind {
+	case yaml.ScalarNode:
 		var single string
 		if err := value.Decode(&single); err != nil {
 			return err
 		}
 		*s = []string{single}
 		return nil
-	} else if value.Kind == yaml.SequenceNode {
+	case yaml.SequenceNode:
 		var result []string
 		for _, elem := range value.Content {
-			if elem.Kind == yaml.ScalarNode {
+			switch elem.Kind {
+			case yaml.ScalarNode:
 				var v string
 				if err := elem.Decode(&v); err != nil {
 					return err
 				}
 				result = append(result, v)
-			} else if elem.Kind == yaml.SequenceNode {
+			case yaml.SequenceNode:
 				var inner StringOrSlice
 				if err := elem.Decode(&inner); err != nil {
 					return err
@@ -57,8 +59,9 @@ func (s *StringOrSlice) UnmarshalYAML(value *yaml.Node) error {
 		}
 		*s = result
 		return nil
+	default:
+		return nil
 	}
-	return nil
 }
 
 func flattenStringOrSliceRaw(v any) []string {
