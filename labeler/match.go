@@ -118,7 +118,6 @@ func MatchLabelerMatch(m LabelerMatch, changedFiles []*github.CommitFile, pr *gi
 		}
 		return true
 	}
-	// ベース互換: any/all省略時はany扱い
 	return MatchLabelerRule(LabelerRule{
 		ChangedFiles: m.ChangedFiles,
 		BaseBranch:   m.BaseBranch,

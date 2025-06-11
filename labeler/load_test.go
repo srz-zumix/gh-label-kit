@@ -112,7 +112,6 @@ test:
 		var found bool
 		for _, rule := range matches[0].All {
 			flat := rule.GetHeadBranch()
-			t.Logf("%s head-branch(flat): %#v", label, flat)
 			if len(flat) == 1 && flat[0] == "^(?!ci/github-actions/).*" {
 				found = true
 				break
