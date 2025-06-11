@@ -59,28 +59,6 @@ func TestLoadConfig_FileNotFound(t *testing.T) {
 	}
 }
 
-func flattenStringOrSlice(ss []string) []string {
-	return append([]string{}, ss...)
-}
-
-func flattenHeadBranch(v any) []string {
-	switch vv := v.(type) {
-	case nil:
-		return nil
-	case string:
-		return []string{vv}
-	case []string:
-		return vv
-	case []any:
-		var result []string
-		for _, e := range vv {
-			result = append(result, flattenHeadBranch(e)...)
-		}
-		return result
-	}
-	return nil
-}
-
 func TestLoadConfig_HeadBranchAnchor(t *testing.T) {
 	yamlContent := `
 ci:
