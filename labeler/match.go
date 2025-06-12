@@ -2,9 +2,9 @@ package labeler
 
 import (
 	"maps"
-	"path/filepath"
 	"slices"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dlclark/regexp2"
 	"github.com/google/go-github/v71/github"
 )
@@ -22,6 +22,27 @@ func (r MatchResult) GetLabels(sync bool) []string {
 	return r.SetTo()
 }
 
+func (r MatchResult) HasDiff(sync bool) bool {
+	allLabels := make(map[string]struct{})
+	for _, label := range r.Current {
+		allLabels[label] = struct{}{}
+	}
+	for _, label := range r.Matched {
+		if _, exists := allLabels[label]; !exists {
+			return true
+		}
+	}
+	if sync {
+		for _, label := range r.Unmatched {
+			if _, exists := allLabels[label]; exists {
+				return true
+			}
+		}
+	}
+	return false
+
+}
+
 func (r MatchResult) SetTo() []string {
 	allLabels := make(map[string]struct{})
 	for _, label := range r.Current {
@@ -30,7 +51,9 @@ func (r MatchResult) SetTo() []string {
 	for _, label := range r.Matched {
 		allLabels[label] = struct{}{}
 	}
-	return slices.Collect(maps.Keys(allLabels))
+	labels := slices.Collect(maps.Keys(allLabels))
+	slices.Sort(labels)
+	return labels
 }
 
 func (r MatchResult) SyncTo() []string {
@@ -44,7 +67,9 @@ func (r MatchResult) SyncTo() []string {
 	for _, label := range r.Unmatched {
 		delete(allLabels, label)
 	}
-	return slices.Collect(maps.Keys(allLabels))
+	labels := slices.Collect(maps.Keys(allLabels))
+	slices.Sort(labels)
+	return labels
 }
 
 func (r MatchResult) AddTo() []string {
@@ -55,7 +80,9 @@ func (r MatchResult) AddTo() []string {
 	for _, label := range r.Current {
 		delete(allLabels, label)
 	}
-	return slices.Collect(maps.Keys(allLabels))
+	labels := slices.Collect(maps.Keys(allLabels))
+	slices.Sort(labels)
+	return labels
 }
 
 func (r MatchResult) DeleteTo() []string {
@@ -68,7 +95,9 @@ func (r MatchResult) DeleteTo() []string {
 			delete(allLabels, label)
 		}
 	}
-	return slices.Collect(maps.Keys(allLabels))
+	labels := slices.Collect(maps.Keys(allLabels))
+	slices.Sort(labels)
+	return labels
 }
 
 func CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr *github.PullRequest) MatchResult {
@@ -96,7 +125,9 @@ func CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr 
 			result.Unmatched = append(result.Unmatched, label)
 		}
 	}
-
+	slices.Sort(result.Current)
+	slices.Sort(result.Matched)
+	slices.Sort(result.Unmatched)
 	return result
 }
 
@@ -205,7 +236,7 @@ func MatchChangedFilesRule(cf ChangedFilesRule, changedFiles []*github.CommitFil
 }
 
 func matchGlob(pattern, filename string) bool {
-	matched, err := filepath.Match(pattern, filename)
+	matched, err := doublestar.PathMatch(pattern, filename)
 	return err == nil && matched
 }
 
