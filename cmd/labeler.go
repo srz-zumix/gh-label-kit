@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/spf13/cobra"
@@ -25,25 +26,36 @@ func NewLabelerCmd() *cobra.Command {
 	var nameOnly bool
 	var syncLabels bool
 	var dryrun bool
+	var ref string
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
 		Long:  `Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, and a YAML config. Supports glob/regex patterns and syncLabels option for label removal. https://github.com/actions/labeler`,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := labeler.LoadConfig(configPath)
-			if err != nil {
-				return fmt.Errorf("failed to load config: %w", err)
-			}
-
 			repository, err := parser.Repository(parser.RepositoryInput(repo))
 			if err != nil {
 				return fmt.Errorf("error parsing repository: %w", err)
 			}
+
 			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(repository)
 			if err != nil {
 				return fmt.Errorf("error creating GitHub client: %w", err)
+			}
+
+			cfg, err := labeler.LoadConfig(configPath)
+			if err != nil {
+				if repo == "" {
+					return fmt.Errorf("failed to load config: %w", err)
+				}
+				if ref == "" {
+					ref = os.Getenv("GITHUB_SHA")
+				}
+				cfg, err = labeler.LoadConfigFromRepo(ctx, client, repository, configPath, &ref)
+				if err != nil {
+					return fmt.Errorf("failed to load config from repository: %w", err)
+				}
 			}
 
 			for _, prNumber := range args {
@@ -97,6 +109,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVar(&nameOnly, "name-only", false, "Output only team names")
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
+	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
 	return cmd
