@@ -103,7 +103,7 @@ func NewLabelerCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", "auto", []string{"always", "never", "auto"}, "Use color in diff output")
+	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", render.ColorFlagAuto, render.ColorFlags, "Use color in diff output")
 	f.StringVarP(&repo, "repo", "R", "", "Target repository in the format 'owner/repo'")
 	f.StringVar(&configPath, "config", ".github/labeler.yml", "Path to labeler config YAML file")
 	f.BoolVar(&nameOnly, "name-only", false, "Output only team names")
