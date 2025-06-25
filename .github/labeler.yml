@@ -1,5 +1,4 @@
 ci:
-# - color: '#7c0bb2'
 - any:
   - changed-files:
     - any-glob-to-any-file: '.github/*'
