@@ -1,0 +1,14 @@
+ci:
+- color: '#7c0bb2'
+- changed-files:
+  - any-glob-to-any-file: '.github/*'
+
+labeler:
+- changed-files:
+  - any-glob-to-any-file: 'labeler/*'
+
+documentation:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'docs/*'
+    - README.md
