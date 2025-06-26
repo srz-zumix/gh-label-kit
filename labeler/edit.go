@@ -18,8 +18,8 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 		}
 		labelMap[*l.Name] = l
 	}
-	for name, matches := range config {
-		color := ColorOfLabel(matches)
+	for name, cfg := range config {
+		color := cfg.Color
 		if color == "" {
 			continue
 		}

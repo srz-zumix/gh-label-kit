@@ -4,8 +4,6 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/bmatcuk/doublestar/v4"
-	"github.com/dlclark/regexp2"
 	"github.com/google/go-github/v71/github"
 )
 
@@ -20,6 +18,24 @@ func (r MatchResult) GetLabels(sync bool) []string {
 		return r.SyncTo()
 	}
 	return r.SetTo()
+}
+
+func (r MatchResult) IsMatched(label string) bool {
+	for _, matched := range r.Matched {
+		if matched == label {
+			return true
+		}
+	}
+	return false
+}
+
+func (r MatchResult) IsUnmatched(label string) bool {
+	for _, matched := range r.Unmatched {
+		if matched == label {
+			return true
+		}
+	}
+	return false
 }
 
 func (r MatchResult) HasDiff(sync bool) bool {
@@ -111,11 +127,11 @@ func CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr 
 		result.Current = append(result.Current, label.GetName())
 	}
 
-	for label, matches := range cfg {
-		matched := false
-		for _, match := range matches {
-			if MatchLabelerMatch(match, changedFiles, pr) {
-				matched = true
+	for label, labelConfig := range cfg {
+		matched := true
+		for _, match := range labelConfig.Matcher {
+			if !matchLabelerMatch(match, changedFiles, pr) {
+				matched = false
 				break
 			}
 		}
@@ -132,121 +148,72 @@ func CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr 
 }
 
 // matchLabelerMatch checks if a PR matches a label's match object (any/all/changed-files/branch)
-func MatchLabelerMatch(m LabelerMatch, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
-	if len(m.Any) > 0 {
-		for _, rule := range m.Any {
-			if MatchLabelerRule(rule, changedFiles, pr) {
-				return true
-			}
-		}
-		return false
-	}
+func matchLabelerMatch(m LabelerMatch, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
 	if len(m.All) > 0 {
-		for _, rule := range m.All {
-			if !MatchLabelerRule(rule, changedFiles, pr) {
-				return false
-			}
+		if !matchLabelerMatchAll(m.All, changedFiles, pr) {
+			return false
 		}
-		return true
 	}
-	return MatchLabelerRule(LabelerRule{
-		ChangedFiles: m.ChangedFiles,
-		BaseBranch:   m.BaseBranch,
-		HeadBranch:   m.HeadBranch,
-	}, changedFiles, pr)
+	if len(m.Any) > 0 {
+		if !matchLabelerMatchAny(m.Any, changedFiles, pr) {
+			return false
+		}
+	}
+	return true
 }
 
-func MatchLabelerRule(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
-	if len(r.ChangedFiles) > 0 {
-		for _, cf := range r.ChangedFiles {
-			if MatchChangedFilesRule(cf, changedFiles) {
-				return true
-			}
-		}
-	}
-	if base := r.GetBaseBranch(); len(base) > 0 {
-		for _, re := range base {
-			if MatchAnyRegex([]string{re}, pr.Base.GetRef()) {
-				return true
-			}
-		}
-	}
-	if head := r.GetHeadBranch(); len(head) > 0 {
-		for _, re := range head {
-			if MatchAnyRegex([]string{re}, pr.Head.GetRef()) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func MatchChangedFilesRule(cf ChangedFilesRule, changedFiles []*github.CommitFile) bool {
-	// any-glob-to-any-file: ANY glob matches ANY file
-	for _, pattern := range cf.AnyGlobToAnyFile {
-		for _, f := range changedFiles {
-			if f.Filename != nil && matchGlob(pattern, *f.Filename) {
-				return true
-			}
-		}
-	}
-	// any-glob-to-all-files: ANY glob matches ALL files
-	if len(cf.AnyGlobToAllFiles) > 0 && len(changedFiles) > 0 {
-		for _, pattern := range cf.AnyGlobToAllFiles {
-			allMatch := true
-			for _, f := range changedFiles {
-				if f.Filename == nil || !matchGlob(pattern, *f.Filename) {
-					allMatch = false
-					break
-				}
-			}
-			if allMatch {
-				return true
-			}
-		}
-	}
-	// all-globs-to-any-file: ALL globs match at least one file
-	if len(cf.AllGlobsToAnyFile) > 0 {
-		for _, pattern := range cf.AllGlobsToAnyFile {
-			found := false
-			for _, f := range changedFiles {
-				if f.Filename != nil && matchGlob(pattern, *f.Filename) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return false
-			}
-		}
-		return true
-	}
-	// all-globs-to-all-files: ALL globs match ALL files
-	if len(cf.AllGlobsToAllFiles) > 0 && len(changedFiles) > 0 {
-		for _, pattern := range cf.AllGlobsToAllFiles {
-			for _, f := range changedFiles {
-				if f.Filename == nil || !matchGlob(pattern, *f.Filename) {
-					return false
-				}
-			}
-		}
-		return true
-	}
-	return false
-}
-
-func matchGlob(pattern, filename string) bool {
-	matched, err := doublestar.PathMatch(pattern, filename)
-	return err == nil && matched
-}
-
-func MatchAnyRegex(patterns []string, branch string) bool {
-	for _, pattern := range patterns {
-		re := regexp2.MustCompile(pattern, regexp2.RE2)
-		matched, err := re.MatchString(branch)
-		if err == nil && matched {
+func matchLabelerMatchAny(rules []LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+	for _, rule := range rules {
+		if matchLabelerRuleAny(rule, changedFiles, pr) {
 			return true
 		}
 	}
 	return false
+}
+
+func matchLabelerMatchAll(rules []LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+	for _, rule := range rules {
+		if !matchLabelerRuleAll(rule, changedFiles, pr) {
+			return false
+		}
+	}
+	return true
+}
+
+func matchLabelerRuleAny(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+	if r.BaseBranch != nil {
+		if matchLabelerRuleBaseBranch(r, pr) {
+			return true
+		}
+	}
+	if r.HeadBranch != nil {
+		if matchLabelerRuleHeadBranch(r, pr) {
+			return true
+		}
+	}
+	if len(r.ChangedFiles) > 0 {
+		if matchChangedFilesAny(r.ChangedFiles, changedFiles) {
+			return true
+		}
+	}
+	return false
+}
+
+func matchLabelerRuleAll(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+	if r.BaseBranch != nil {
+		if !matchLabelerRuleBaseBranch(r, pr) {
+			return false
+		}
+	}
+	if r.HeadBranch != nil {
+		if !matchLabelerRuleHeadBranch(r, pr) {
+			return false
+		}
+	}
+	if len(r.ChangedFiles) > 0 {
+		if !matchChangedFilesAll(r.ChangedFiles, changedFiles) {
+			return false
+		}
+	}
+	return true
 }
