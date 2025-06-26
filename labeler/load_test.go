@@ -162,3 +162,24 @@ documentation:
 		}
 	}
 }
+
+func TestLoadConfig_ColorOnly(t *testing.T) {
+	yamlContent := `
+ci:
+  - color: '#7c0bb2'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 3 labels, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	if len(lc.Matcher) != 0 {
+		t.Errorf("expected no matchers for ci, got %d", len(lc.Matcher))
+	}
+}

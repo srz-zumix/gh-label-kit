@@ -123,16 +123,19 @@ func colorOfLabel(matches []labelerYamlMatch) string {
 func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 	cfg := make(LabelerConfig, len(*r))
 	for label, matches := range *r {
-		cfg[label] = LabelerLabelConfig{
-			Matcher: make([]LabelerMatch, len(matches)),
-			Color:   colorOfLabel(matches),
-		}
-		for i := range matches {
-			matches[i].Normalize()
-			cfg[label].Matcher[i] = LabelerMatch{
-				Any: matches[i].Any,
-				All: matches[i].All,
+		matchers := []LabelerMatch{}
+		for _, m := range matches {
+			m.Normalize()
+			if len(m.Any) != 0 || len(m.All) != 0 {
+				matchers = append(matchers, LabelerMatch{
+					Any: m.Any,
+					All: m.All,
+				})
 			}
+		}
+		cfg[label] = LabelerLabelConfig{
+			Matcher: matchers,
+			Color:   colorOfLabel(matches),
 		}
 	}
 	return cfg
