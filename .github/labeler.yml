@@ -2,7 +2,13 @@ ci:
 - any:
   - changed-files:
     - any-glob-to-any-file: '.github/*'
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '.github/*'
 - color: '#7c0bb2'
+
+empty:
+- color: '#000000'
 
 labeler:
 - changed-files:
