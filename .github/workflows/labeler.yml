@@ -12,5 +12,7 @@ jobs:
     steps:
     - uses: actions/labeler@v5
       id: labeler
+      with:
+        sync-labels: true
     - run: |
         echo "Labels: ${{ steps.labeler.outputs.all-labels }}"

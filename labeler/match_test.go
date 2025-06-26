@@ -86,6 +86,24 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 	}
 }
 
+func TestCheckMatchConfigs_BranchAndFiles_Empty(t *testing.T) {
+	cfg := LabelerConfig{
+		"label1": LabelerLabelConfig{
+			Color: "ff0000",
+		},
+	}
+	pr := &github.PullRequest{
+		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
+		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
+		Labels: []*github.Label{},
+	}
+	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	result := CheckMatchConfigs(cfg, files, pr)
+	if result.IsMatched("label1") {
+		t.Errorf("label1 should not be matched")
+	}
+}
+
 func TestCheckMatchConfigs_RegexAndDotOption(t *testing.T) {
 	cfg := LabelerConfig{
 		"dotlabel": LabelerLabelConfig{

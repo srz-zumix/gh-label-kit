@@ -128,7 +128,7 @@ func CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr 
 	}
 
 	for label, labelConfig := range cfg {
-		matched := true
+		matched := len(labelConfig.Matcher) != 0
 		for _, match := range labelConfig.Matcher {
 			if !matchLabelerMatch(match, changedFiles, pr) {
 				matched = false
