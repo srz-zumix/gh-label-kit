@@ -11,3 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/labeler@v5
+      id: labeler
+    - run: |
+        echo "Labels: ${{ steps.labeler.outputs.all-labels }}"
