@@ -4,7 +4,7 @@ ci:
     - any-glob-to-any-file: '.github/*'
 - any:
   - changed-files:
-    - any-glob-to-any-file: '.github/*'
+    - any-glob-to-any-file: '.githaub/*'
 - color: '#7c0bb2'
 
 empty:
