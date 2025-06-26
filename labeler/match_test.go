@@ -86,7 +86,7 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 	}
 }
 
-func TestCheckMatchConfigs_BranchAndFiles_Empty(t *testing.T) {
+func TestCheckMatchConfigs_BranchAndFiles_ColorOnly(t *testing.T) {
 	cfg := LabelerConfig{
 		"label1": LabelerLabelConfig{
 			Color: "ff0000",
