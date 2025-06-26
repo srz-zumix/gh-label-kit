@@ -1,16 +1,20 @@
 package labeler
 
-import "gopkg.in/yaml.v3"
+import (
+	"gopkg.in/yaml.v3"
+)
 
-// LabelerConfig represents the YAML config for labeler (v5 compatible)
+// LabelerConfig represents the YAML config for labeler (v5 compatible, supports per-label color key)
 type LabelerConfig map[string][]LabelerMatch
 
+// LabelerMatch supports per-label color key (actions/labeler v5 style)
 type LabelerMatch struct {
 	Any          []LabelerRule      `yaml:"any,omitempty"`
 	All          []LabelerRule      `yaml:"all,omitempty"`
 	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Color        string             `yaml:"color,omitempty"`
 }
 
 type LabelerRule struct {
@@ -93,4 +97,14 @@ func (r *LabelerRule) GetBaseBranch() []string {
 }
 func (r *LabelerRule) GetHeadBranch() []string {
 	return flattenStringOrSliceRaw(r.HeadBranch)
+}
+
+// ColorOfLabel returns the color string for a label (if any), allowing for color-only elements in the config.
+func ColorOfLabel(matches []LabelerMatch) string {
+	for _, m := range matches {
+		if m.Color != "" {
+			return m.Color
+		}
+	}
+	return ""
 }

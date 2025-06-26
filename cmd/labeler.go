@@ -83,11 +83,15 @@ func NewLabelerCmd() *cobra.Command {
 					labels := pr.Labels
 					if result.HasDiff(syncLabels) {
 						renderer.WriteLine(fmt.Sprintf("Labels set for PR #%s", prNumber))
-						labels, err = labeler.SetLabels(ctx, client, repository, pr, allLabels)
+						labels, err = labeler.SetLabels(ctx, client, repository, pr, allLabels, cfg)
 						if err != nil {
 							return fmt.Errorf("failed to set labels for PR %s: %w", prNumber, err)
 						}
 					} else {
+						_, err = labeler.EditLabelsByConfig(ctx, client, repository, labels, cfg)
+						if err != nil {
+							return fmt.Errorf("failed to edit labels for PR %s: %w", prNumber, err)
+						}
 						renderer.WriteLine(fmt.Sprintf("No label changes for PR #%s", prNumber))
 					}
 					renderer.SetColor(colorFlag)

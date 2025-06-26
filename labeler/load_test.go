@@ -100,3 +100,49 @@ test:
 		}
 	}
 }
+
+func TestLoadConfig_ColorKey(t *testing.T) {
+	yamlContent := `
+ci:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: '.github/*'
+  - color: '#7c0bb2'
+labeler:
+  - changed-files:
+      - any-glob-to-any-file: 'labeler/*'
+  - color: '#123456'
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/*'
+          - README.md
+  - color: '#abcdef'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 3 {
+		t.Errorf("expected 3 labels, got %d", len(cfg))
+	}
+	cases := []struct {
+		label string
+		want  string
+	}{
+		{"ci", "#7c0bb2"},
+		{"labeler", "#123456"},
+		{"documentation", "#abcdef"},
+	}
+	for _, c := range cases {
+		matches := cfg[c.label]
+		if len(matches) == 0 {
+			t.Errorf("%s not loaded", c.label)
+			continue
+		}
+		color := ColorOfLabel(matches)
+		if color != c.want {
+			t.Errorf("%s color = %q, want %q", c.label, color, c.want)
+		}
+	}
+}
