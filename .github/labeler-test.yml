@@ -47,6 +47,14 @@ self-test-any-ci:
       all-globs-to-any-file : '____no_match____'
       all-globs-to-all-files: '____no_match____'
 
+self-test-any-ci2:
+- any:
+  - changed-files:
+    - any-glob-to-any-file  : '.github/*'
+    - any-glob-to-all-files : '____no_match____'
+    - all-globs-to-any-file : '____no_match____'
+    - all-globs-to-all-files: '____no_match____'
+
 self-test-all-ci:
 - all:
   - changed-files:
