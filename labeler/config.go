@@ -1,16 +1,31 @@
 package labeler
 
-import "gopkg.in/yaml.v3"
+import (
+	"gopkg.in/yaml.v3"
+)
 
-// LabelerConfig represents the YAML config for labeler (v5 compatible)
-type LabelerConfig map[string][]LabelerMatch
+type LabelerConfig map[string]LabelerLabelConfig
+type LabelerLabelConfig struct {
+	Matcher []LabelerMatch
+	Color   string
+}
 
 type LabelerMatch struct {
+	Any []LabelerRule
+	All []LabelerRule
+}
+
+// LabelerConfig represents the YAML config for labeler (v5 compatible, supports per-label color key)
+type labelerYamlConfig map[string][]labelerYamlMatch
+
+// LabelerMatch supports per-label color key (actions/labeler v5 style)
+type labelerYamlMatch struct {
 	Any          []LabelerRule      `yaml:"any,omitempty"`
 	All          []LabelerRule      `yaml:"all,omitempty"`
 	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Color        string             `yaml:"color,omitempty"`
 }
 
 type LabelerRule struct {
@@ -82,10 +97,10 @@ func flattenStringOrSliceRaw(v any) []string {
 	return nil
 }
 
-func (m *LabelerMatch) GetBaseBranch() []string {
+func (m *labelerYamlMatch) GetBaseBranch() []string {
 	return flattenStringOrSliceRaw(m.BaseBranch)
 }
-func (m *LabelerMatch) GetHeadBranch() []string {
+func (m *labelerYamlMatch) GetHeadBranch() []string {
 	return flattenStringOrSliceRaw(m.HeadBranch)
 }
 func (r *LabelerRule) GetBaseBranch() []string {
@@ -93,4 +108,59 @@ func (r *LabelerRule) GetBaseBranch() []string {
 }
 func (r *LabelerRule) GetHeadBranch() []string {
 	return flattenStringOrSliceRaw(r.HeadBranch)
+}
+
+// ColorOfLabel returns the color string for a label (if any), allowing for color-only elements in the config.
+func colorOfLabel(matches []labelerYamlMatch) string {
+	for _, m := range matches {
+		if m.Color != "" {
+			return m.Color
+		}
+	}
+	return ""
+}
+
+func (r *labelerYamlConfig) GetConfig() LabelerConfig {
+	cfg := make(LabelerConfig, len(*r))
+	for label, matches := range *r {
+		matchers := []LabelerMatch{}
+		for _, m := range matches {
+			m.Normalize()
+			if len(m.Any) != 0 || len(m.All) != 0 {
+				matchers = append(matchers, LabelerMatch{
+					Any: m.Any,
+					All: m.All,
+				})
+			}
+		}
+		cfg[label] = LabelerLabelConfig{
+			Matcher: matchers,
+			Color:   colorOfLabel(matches),
+		}
+	}
+	return cfg
+}
+
+func (m *labelerYamlMatch) Normalize() {
+	anyRules := make([]LabelerRule, 0)
+	if m.BaseBranch != nil {
+		anyRules = append(anyRules, LabelerRule{BaseBranch: m.GetBaseBranch()})
+		m.BaseBranch = nil // Clear to avoid duplication
+	}
+	if m.HeadBranch != nil {
+		anyRules = append(anyRules, LabelerRule{HeadBranch: m.GetHeadBranch()})
+		m.HeadBranch = nil // Clear to avoid duplication
+	}
+	if len(m.ChangedFiles) > 0 {
+		anyRules = append(anyRules, LabelerRule{ChangedFiles: m.ChangedFiles})
+		m.ChangedFiles = nil // Clear to avoid duplication
+	}
+
+	if len(anyRules) > 0 {
+		if m.Any == nil {
+			m.Any = anyRules
+		} else {
+			m.Any = append(m.Any, anyRules...)
+		}
+	}
 }

@@ -13,11 +13,11 @@ import (
 )
 
 func LoadConfigFromReader(r io.Reader) (LabelerConfig, error) {
-	var cfg LabelerConfig
+	var cfg labelerYamlConfig
 	if err := yaml.NewDecoder(r).Decode(&cfg); err != nil {
 		return nil, err
 	}
-	return cfg, nil
+	return cfg.GetConfig(), nil
 }
 
 func LoadConfig(path string) (LabelerConfig, error) {

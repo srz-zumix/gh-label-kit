@@ -1,0 +1,64 @@
+ci:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '.github/*'
+- color: '#7c0bb2'
+
+labeler:
+- changed-files:
+  - any-glob-to-any-file: 'labeler/*'
+
+documentation:
+- changed-files:
+  - any-glob-to-any-file:
+    - 'docs/*'
+    - README.md
+
+#
+# tests
+#
+
+no-match:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '.githaub/*'
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '.githab/*'
+- color: '#7c0bb2'
+
+empty:
+- color: '#000000'
+
+empty2:
+- any:
+  - changed-files:
+    color: '#333333'
+
+empty3:
+- changed-files:
+  color: '#666666'
+
+self-test-any-ci:
+- any:
+  - changed-files:
+    - any-glob-to-any-file  : '.github/*'
+      any-glob-to-all-files : '____no_match____'
+      all-globs-to-any-file : '____no_match____'
+      all-globs-to-all-files: '____no_match____'
+
+self-test-any-ci2:
+- any:
+  - changed-files:
+    - any-glob-to-any-file  : '.github/*'
+    - any-glob-to-all-files : '____no_match____'
+    - all-globs-to-any-file : '____no_match____'
+    - all-globs-to-all-files: '____no_match____'
+
+self-test-all-ci:
+- all:
+  - changed-files:
+    - any-glob-to-any-file  : '.github/*'
+      any-glob-to-all-files : '____no_match____'
+      all-globs-to-any-file : '____no_match____'
+      all-globs-to-all-files: '____no_match____'

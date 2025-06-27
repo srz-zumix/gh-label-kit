@@ -9,19 +9,35 @@ func TestLoadConfig_Simple(t *testing.T) {
 	yamlContent := `
 label-a:
   - any:
-      - changed-files:
-          - any-glob-to-any-file: "*.go"
+    - changed-files:
+      - any-glob-to-any-file: "*.go"
 label-b:
   - all:
-      - changed-files:
-          - any-glob-to-any-file: "*.md"
+    - changed-files:
+      - any-glob-to-any-file: "*.md"
+label-c:
+  - changed-files:
+    - any-glob-to-any-file: "*.txt"
 `
 	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
-	if len(cfg) != 2 {
+	if len(cfg) != 3 {
 		t.Errorf("expected 2 labels, got %d", len(cfg))
+	}
+	for _, label := range []string{"label-a", "label-b", "label-c"} {
+		lc, ok := cfg[label]
+		if !ok {
+			t.Errorf("%s not found in config", label)
+		}
+		if len(lc.Matcher) != 1 {
+			t.Errorf("%s should have exactly one match, got %d", label, len(lc.Matcher))
+		}
+		m := lc.Matcher[0]
+		if len(m.Any) == 0 && len(m.All) == 0 {
+			t.Errorf("%s should have either Any or All rules, got neither", label)
+		}
 	}
 }
 
@@ -82,13 +98,13 @@ test:
 		t.Errorf("expected 2 labels, got %d", len(cfg))
 	}
 	for _, label := range []string{"ci", "test"} {
-		matches := cfg[label]
-		if len(matches) == 0 || len(matches[0].All) == 0 {
+		lc, ok := cfg[label]
+		if !ok || len(lc.Matcher[0].All) == 0 {
 			t.Errorf("%s All not loaded", label)
 			continue
 		}
 		var found bool
-		for _, rule := range matches[0].All {
+		for _, rule := range lc.Matcher[0].All {
 			flat := rule.GetHeadBranch()
 			if len(flat) == 1 && flat[0] == "^(?!ci/github-actions/).*" {
 				found = true
@@ -98,5 +114,72 @@ test:
 		if !found {
 			t.Errorf("%s head-branch does not contain exactly one expected pattern", label)
 		}
+	}
+}
+
+func TestLoadConfig_ColorKey(t *testing.T) {
+	yamlContent := `
+ci:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: '.github/*'
+  - color: '#7c0bb2'
+labeler:
+  - changed-files:
+      - any-glob-to-any-file: 'labeler/*'
+  - color: '#123456'
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/*'
+          - README.md
+  - color: '#abcdef'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 3 {
+		t.Errorf("expected 3 labels, got %d", len(cfg))
+	}
+	cases := []struct {
+		label string
+		want  string
+	}{
+		{"ci", "#7c0bb2"},
+		{"labeler", "#123456"},
+		{"documentation", "#abcdef"},
+	}
+	for _, c := range cases {
+		lc, ok := cfg[c.label]
+		if !ok {
+			t.Errorf("%s not loaded", c.label)
+			continue
+		}
+		color := lc.Color
+		if color != c.want {
+			t.Errorf("%s color = %q, want %q", c.label, color, c.want)
+		}
+	}
+}
+
+func TestLoadConfig_ColorOnly(t *testing.T) {
+	yamlContent := `
+ci:
+  - color: '#7c0bb2'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 3 labels, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	if len(lc.Matcher) != 0 {
+		t.Errorf("expected no matchers for ci, got %d", len(lc.Matcher))
 	}
 }
