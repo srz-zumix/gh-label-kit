@@ -42,15 +42,15 @@ empty3:
 self-test-any-ci:
 - any:
   - changed-files:
-    - any-glob-to-any-file: '.github/*'
-      all-glob-to-any-file: '____no_match____'
-      any-glob-to-all-file: '____no_match____'
-      all-glob-to-all-file: '____no_match____'
+    - any-glob-to-any-file  : '.github/*'
+      any-glob-to-all-files : '____no_match____'
+      all-globs-to-any-file : '____no_match____'
+      all-globs-to-all-files: '____no_match____'
 
 self-test-all-ci:
 - all:
   - changed-files:
-    - any-glob-to-any-file: '.github/*'
-      all-glob-to-any-file: '____no_match____'
-      any-glob-to-all-file: '____no_match____'
-      all-glob-to-all-file: '____no_match____'
+    - any-glob-to-any-file  : '.github/*'
+      any-glob-to-all-files : '____no_match____'
+      all-globs-to-any-file : '____no_match____'
+      all-globs-to-all-files: '____no_match____'
