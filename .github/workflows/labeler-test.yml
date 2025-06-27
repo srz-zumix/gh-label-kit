@@ -42,7 +42,7 @@ jobs:
         run: |
           MATCHED_LABELS=$(go run . labeler \
             --config ${{ env.CONFIGURATION_PATH }} \
-            --sync true \
+            --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             ${{ github.event.number }})
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
