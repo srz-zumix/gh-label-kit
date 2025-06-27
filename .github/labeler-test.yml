@@ -29,3 +29,28 @@ no-match:
 
 empty:
 - color: '#000000'
+
+empty2:
+- any:
+  - changed-files:
+    color: '#333333'
+
+empty3:
+- changed-files:
+  color: '#666666'
+
+self-test-any-ci:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: '.github/*'
+      all-glob-to-any-file: '____no_match____'
+      any-glob-to-all-file: '____no_match____'
+      all-glob-to-all-file: '____no_match____'
+
+self-test-all-ci:
+- all:
+  - changed-files:
+    - any-glob-to-any-file: '.github/*'
+      all-glob-to-any-file: '____no_match____'
+      any-glob-to-all-file: '____no_match____'
+      all-glob-to-all-file: '____no_match____'
