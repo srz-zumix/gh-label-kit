@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONFIGURATION_PATH: .github/labeler-test.yml
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
