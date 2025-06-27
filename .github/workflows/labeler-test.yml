@@ -48,4 +48,4 @@ jobs:
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test
         run: |
-          test [ "${{ steps.labeler.outputs.all-labels }}" == ${{ steps.label-kit-labeler.outputs.labels }}  ]
+          test [ "${{ steps.labeler.outputs.all-labels }}" == "${{ steps.label-kit-labeler.outputs.labels }}" ]
