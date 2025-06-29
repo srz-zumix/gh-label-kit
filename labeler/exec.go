@@ -15,7 +15,7 @@ func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Reposito
 		excessLabels = allLebels[100:]
 		allLebels = allLebels[:100]
 	}
-	labels, err := gh.SetPullRequestLabelsByNumber(ctx, g, repo, pr.GetNumber(), allLebels)
+	labels, err := gh.SetPullRequestLabels(ctx, g, repo, pr, allLebels)
 	if err != nil {
 		return nil, err
 	}
