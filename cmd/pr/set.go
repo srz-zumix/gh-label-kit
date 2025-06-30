@@ -15,7 +15,7 @@ type SetOptions struct {
 	Exporter cmdutil.Exporter
 }
 
-func NewPRSetLabelCmd() *cobra.Command {
+func NewSetCmd() *cobra.Command {
 	opts := &SetOptions{}
 	var colorFlag string
 	var repo string

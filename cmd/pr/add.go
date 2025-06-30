@@ -15,7 +15,7 @@ type AddOptions struct {
 	Exporter cmdutil.Exporter
 }
 
-func NewPRAddLabelCmd() *cobra.Command {
+func NewAddCmd() *cobra.Command {
 	opts := &AddOptions{}
 	var colorFlag string
 	var repo string
