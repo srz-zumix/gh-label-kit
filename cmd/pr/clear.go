@@ -9,7 +9,7 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
 )
 
-func NewPRClearLabelCmd() *cobra.Command {
+func NewClearCmd() *cobra.Command {
 	var repo string
 	cmd := &cobra.Command{
 		Use:   "clear <pr-number>",

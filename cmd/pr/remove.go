@@ -15,7 +15,7 @@ type RemoveOptions struct {
 	Exporter cmdutil.Exporter
 }
 
-func NewPRRemoveLabelCmd() *cobra.Command {
+func NewRemoveCmd() *cobra.Command {
 	opts := &RemoveOptions{}
 	var colorFlag string
 	var repo string

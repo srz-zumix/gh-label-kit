@@ -13,11 +13,11 @@ func NewPRCmd() *cobra.Command {
 		Long:  `Manage pull requests.`,
 	}
 
-	cmd.AddCommand(pr.NewPRLabelsCmd())
-	cmd.AddCommand(pr.NewPRAddLabelCmd())
-	cmd.AddCommand(pr.NewPRRemoveLabelCmd())
-	cmd.AddCommand(pr.NewPRClearLabelCmd())
-	cmd.AddCommand(pr.NewPRSetLabelCmd())
+	cmd.AddCommand(pr.NewListCmd())
+	cmd.AddCommand(pr.NewAddCmd())
+	cmd.AddCommand(pr.NewRemoveCmd())
+	cmd.AddCommand(pr.NewClearCmd())
+	cmd.AddCommand(pr.NewSetCmd())
 	return cmd
 }
 
