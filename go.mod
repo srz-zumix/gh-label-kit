@@ -7,7 +7,7 @@ require (
 	github.com/cli/go-gh/v2 v2.12.1
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/google/go-github/v71 v71.0.0
-	github.com/srz-zumix/go-gh-extension v0.1.6
+	github.com/srz-zumix/go-gh-extension v0.1.8
 )
 
 require (
