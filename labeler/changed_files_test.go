@@ -3,7 +3,7 @@ package labeler
 import (
 	"testing"
 
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v73/github"
 )
 
 func TestMatchChangedFilesRule(t *testing.T) {

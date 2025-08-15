@@ -4,7 +4,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v73/github"
 )
 
 type MatchResult struct {

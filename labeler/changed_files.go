@@ -1,7 +1,7 @@
 package labeler
 
 import (
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v73/github"
 )
 
 func matchChangedFilesAny(rules []ChangedFilesRule, changedFiles []*github.CommitFile) bool {
