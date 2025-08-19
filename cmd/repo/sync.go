@@ -37,9 +37,9 @@ func NewSyncCmd() *cobra.Command {
 					return fmt.Errorf("source and destination repositories must be on the same host: %s vs %s", src.Host, dst.Host)
 				}
 				if err := gh.SyncLabels(ctx, client, src, dst, force); err != nil {
-					return fmt.Errorf("failed to sync labels to %s: %w", dstArg, err)
+					return fmt.Errorf("failed to sync labels to %s: %w", parser.GetRepositoryFullName(dst), err)
 				}
-				fmt.Printf("Successfully synced labels from %s to %s\n", args[0], dstArg)
+				fmt.Printf("Successfully synced labels from %s to %s\n", parser.GetRepositoryFullName(src), parser.GetRepositoryFullName(dst))
 			}
 			return nil
 		},

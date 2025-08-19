@@ -31,7 +31,7 @@ func NewClearCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to clear labels from pull request #%s: %w", pullRequest, err)
 			}
-			fmt.Printf("All labels removed from pull request #%s in repository %s/%s\n", pullRequest, repository.Owner, repository.Name)
+			fmt.Printf("All labels removed from pull request #%s in repository %s\n", pullRequest, parser.GetRepositoryFullName(repository))
 			return nil
 		},
 	}

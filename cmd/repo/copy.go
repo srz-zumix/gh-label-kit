@@ -39,9 +39,9 @@ func NewCopyCmd() *cobra.Command {
 				}
 
 				if err := gh.CopyLabels(ctx, client, src, dst, force); err != nil {
-					return fmt.Errorf("failed to copy labels to %s: %w", dstArg, err)
+					return fmt.Errorf("failed to copy labels to %s: %w", parser.GetRepositoryFullName(dst), err)
 				}
-				fmt.Printf("Successfully copied labels from %s to %s\n", repo, dstArg)
+				fmt.Printf("Successfully copied labels from %s to %s\n", parser.GetRepositoryFullName(src), parser.GetRepositoryFullName(dst))
 			}
 			return nil
 		},
