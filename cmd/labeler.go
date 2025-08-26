@@ -48,9 +48,6 @@ func NewLabelerCmd() *cobra.Command {
 
 			cfg, err := labeler.LoadConfig(configPath)
 			if err != nil {
-				if repo == "" {
-					return fmt.Errorf("failed to load config: %w", err)
-				}
 				if ref == "" {
 					ref = os.Getenv("GITHUB_SHA")
 				}
