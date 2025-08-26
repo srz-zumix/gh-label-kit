@@ -34,8 +34,10 @@ jobs:
         with:
           sync-labels: true
           configuration-path: ${{ env.CONFIGURATION_PATH }}
-      - run: |
-          echo "Labels: ${{ steps.labeler.outputs.all-labels }}"
+      - env:
+          ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+        run: |
+          echo "Labels: ${ALL_LABELS}"
 
       - name: Label-kit labeler
         id: label-kit-labeler
@@ -47,5 +49,8 @@ jobs:
             ${{ github.event.number }})
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test
+        env:
+          LABELER_ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+          LABEL_KIT_ALL_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
         run: |
-          test "${{ steps.labeler.outputs.all-labels }}" == "${{ steps.label-kit-labeler.outputs.labels }}"
+          test "${LABELER_ALL_LABELS}" == "${LABEL_KIT_ALL_LABELS}"

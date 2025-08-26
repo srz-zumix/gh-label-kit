@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/spf13/cobra"
 	"github.com/srz-zumix/gh-label-kit/labeler"
+	"github.com/srz-zumix/go-gh-extension/pkg/actions"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
 	"github.com/srz-zumix/go-gh-extension/pkg/render"
@@ -100,6 +102,15 @@ func NewLabelerCmd() *cobra.Command {
 					} else {
 						renderer.RenderLabelsDefault(labels)
 					}
+				}
+
+				err = actions.Output("new-labels", strings.Join(result.AddTo(), ","))
+				if err != nil {
+					return fmt.Errorf("failed to set action output: %w", err)
+				}
+				err = actions.Output("all-labels", strings.Join(allLabels, ","))
+				if err != nil {
+					return fmt.Errorf("failed to set action output: %w", err)
 				}
 			}
 			return nil
