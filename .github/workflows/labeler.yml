@@ -14,5 +14,7 @@ jobs:
       id: labeler
       with:
         sync-labels: true
-    - run: |
-        echo "Labels: ${{ steps.labeler.outputs.all-labels }}"
+    - env:
+        ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+      run: |
+        echo "Labels: ${ALL_LABELS}"

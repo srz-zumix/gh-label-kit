@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/srz-zumix/gh-label-kit/version"
+	"github.com/srz-zumix/go-gh-extension/pkg/actions"
 )
 
 var rootCmd = &cobra.Command{
@@ -25,4 +26,7 @@ func Execute() {
 }
 
 func init() {
+	if actions.IsRunsOn() {
+		rootCmd.SetErrPrefix(actions.GetErrorPrefix())
+	}
 }
