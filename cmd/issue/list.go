@@ -1,4 +1,4 @@
-package pr
+package issue
 
 import (
 	"context"
@@ -20,12 +20,12 @@ func NewListCmd() *cobra.Command {
 	var colorFlag string
 	var repo string
 	cmd := &cobra.Command{
-		Use:   "list <pr-number>",
-		Short: "List labels for a pull request",
-		Long:  `List all labels attached to a pull request in the repository.`,
+		Use:   "list <number>",
+		Short: "List labels for a issue",
+		Long:  `List all labels attached to a issue in the repository.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pullRequest := args[0]
+			issueNumber := args[0]
 			repository, err := parser.Repository(parser.RepositoryInput(repo))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
@@ -35,13 +35,13 @@ func NewListCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			pr, err := gh.GetPullRequest(ctx, client, repository, pullRequest)
+			issue, err := gh.GetIssue(ctx, client, repository, issueNumber)
 			if err != nil {
-				return fmt.Errorf("failed to get pull request #%s: %w", pullRequest, err)
+				return fmt.Errorf("failed to get issue #%s: %w", issueNumber, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(pr.Labels)
+			renderer.RenderLabelsDefault(issue.Labels)
 			return nil
 		},
 	}

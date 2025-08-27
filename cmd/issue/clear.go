@@ -1,4 +1,4 @@
-package pr
+package issue
 
 import (
 	"context"
@@ -12,12 +12,12 @@ import (
 func NewClearCmd() *cobra.Command {
 	var repo string
 	cmd := &cobra.Command{
-		Use:   "clear <pr-number>",
-		Short: "Remove all labels from a pull request",
-		Long:  `Remove all labels from a pull request in the repository.`,
+		Use:   "clear <number>",
+		Short: "Remove all labels from a issue",
+		Long:  `Remove all labels from a issue in the repository.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pullRequest := args[0]
+			issue := args[0]
 			repository, err := parser.Repository(parser.RepositoryInput(repo))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
@@ -27,11 +27,11 @@ func NewClearCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			err = gh.ClearPullRequestLabels(ctx, client, repository, pullRequest)
+			err = gh.ClearIssueLabels(ctx, client, repository, issue)
 			if err != nil {
-				return fmt.Errorf("failed to clear labels from pull request #%s: %w", pullRequest, err)
+				return fmt.Errorf("failed to clear labels from issue #%s: %w", issue, err)
 			}
-			fmt.Printf("All labels removed from pull request #%s in repository %s\n", pullRequest, parser.GetRepositoryFullName(repository))
+			fmt.Printf("All labels removed from issue #%s in repository %s\n", issue, parser.GetRepositoryFullName(repository))
 			return nil
 		},
 	}

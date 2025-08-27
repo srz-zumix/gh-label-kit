@@ -1,4 +1,4 @@
-package pr
+package issue
 
 import (
 	"context"
@@ -20,12 +20,12 @@ func NewRemoveCmd() *cobra.Command {
 	var colorFlag string
 	var repo string
 	cmd := &cobra.Command{
-		Use:   "remove <pr-number> <label>...",
-		Short: "Remove label(s) from a pull request",
-		Long:  `Remove one or more labels from a pull request in the repository.`,
+		Use:   "remove <number> <label>...",
+		Short: "Remove label(s) from a issue",
+		Long:  `Remove one or more labels from a issue in the repository.`,
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pullRequest := args[0]
+			issue := args[0]
 			labelsToRemove := args[1:]
 			repository, err := parser.Repository(parser.RepositoryInput(repo))
 			if err != nil {
@@ -36,9 +36,9 @@ func NewRemoveCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			labels, err := gh.RemovePullRequestLabels(ctx, client, repository, pullRequest, labelsToRemove)
+			labels, err := gh.RemoveIssueLabels(ctx, client, repository, issue, labelsToRemove)
 			if err != nil {
-				return fmt.Errorf("failed to get pull request #%s: %w", pullRequest, err)
+				return fmt.Errorf("failed to get issue #%s: %w", issue, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
