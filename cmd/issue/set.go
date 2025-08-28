@@ -1,4 +1,4 @@
-package pr
+package issue
 
 import (
 	"context"
@@ -11,22 +11,22 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/render"
 )
 
-type AddOptions struct {
+type SetOptions struct {
 	Exporter cmdutil.Exporter
 }
 
-func NewAddCmd() *cobra.Command {
-	opts := &AddOptions{}
+func NewSetCmd() *cobra.Command {
+	opts := &SetOptions{}
 	var colorFlag string
 	var repo string
 	cmd := &cobra.Command{
-		Use:   "add <pr-number> <label>...",
-		Short: "Add label(s) to a pull request",
-		Long:  `Add one or more labels to a pull request in the repository.`,
+		Use:   "set <number> <label>...",
+		Short: "Set labels for a issue (replace all)",
+		Long:  `Set (replace) all labels for a issue in the repository.`,
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			addLabels := args[1:]
-			pullRequest := args[0]
+			issue := args[0]
+			labels := args[1:]
 			repository, err := parser.Repository(parser.RepositoryInput(repo))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
@@ -36,20 +36,19 @@ func NewAddCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			labels, err := gh.AddPullRequestLabels(ctx, client, repository, pullRequest, addLabels)
+			result, err := gh.SetIssueLabels(ctx, client, repository, issue, labels)
 			if err != nil {
-				return fmt.Errorf("failed to add labels to pull request #%s: %w", pullRequest, err)
+				return fmt.Errorf("failed to set labels for issue #%s: %w", issue, err)
 			}
-
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(labels)
+			renderer.RenderLabelsDefault(result)
 			return nil
 		},
 	}
 	f := cmd.Flags()
 	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", render.ColorFlagAuto, render.ColorFlags, "Use color in diff output")
 	f.StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
-	cmdutil.AddFormatFlags(cmd, nil)
+	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 	return cmd
 }
