@@ -14,6 +14,16 @@ documentation:
     - 'docs/*'
     - README.md
 
+allways:
+- changed-files:
+  - any-glob-to-any-file:
+    - '**'
+
+root:
+- changed-files:
+  - any-glob-to-any-file:
+    - '*'
+
 #
 # tests
 #
