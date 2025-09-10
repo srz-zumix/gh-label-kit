@@ -14,6 +14,8 @@ func TestMatchGlob(t *testing.T) {
 		{"docs/*", "docs/readme.md", true},
 		{"docs/*", "src/readme.md", false},
 		{"**", ".github/labeler.yml", true},
+		{"*", ".github/labeler.yml", false},
+		{"*", "aqua.yml", true},
 	}
 	for _, c := range cases {
 		if got := matchGlob(c.pattern, c.filename); got != c.want {
