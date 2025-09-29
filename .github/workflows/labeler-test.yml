@@ -88,7 +88,6 @@ jobs:
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             1)
-          if
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Label-kit sync-disable
         id: sync-disable
@@ -98,7 +97,6 @@ jobs:
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             1)
-          if
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test
         env:
