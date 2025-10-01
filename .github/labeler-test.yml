@@ -1,17 +1,17 @@
 ci:
 - any:
   - changed-files:
-    - any-glob-to-all-files: '.github/*'
+    - any-glob-to-all-files: '.github/**'
 - color: '#7c0bb2'
 
 labeler:
 - changed-files:
-  - any-glob-to-any-file: 'labeler/*'
+  - any-glob-to-any-file: 'labeler/**'
 
 documentation:
 - changed-files:
   - any-glob-to-any-file:
-    - 'docs/*'
+    - 'docs/**'
     - README.md
 
 allways:
@@ -31,10 +31,10 @@ root:
 no-match:
 - any:
   - changed-files:
-    - any-glob-to-any-file: '.githaub/*'
+    - any-glob-to-any-file: '.githaub/**'
 - any:
   - changed-files:
-    - any-glob-to-any-file: '.githab/*'
+    - any-glob-to-any-file: '.githab/**'
 - color: '#7c0bb2'
 
 empty:
@@ -52,7 +52,7 @@ empty3:
 self-test-any-ci:
 - any:
   - changed-files:
-    - any-glob-to-any-file  : '.github/*'
+    - any-glob-to-any-file  : '.github/**'
       any-glob-to-all-files : '____no_match____'
       all-globs-to-any-file : '____no_match____'
       all-globs-to-all-files: '____no_match____'
@@ -60,7 +60,7 @@ self-test-any-ci:
 self-test-any-ci2:
 - any:
   - changed-files:
-    - any-glob-to-any-file  : '.github/*'
+    - any-glob-to-any-file  : '.github/**'
     - any-glob-to-all-files : '____no_match____'
     - all-globs-to-any-file : '____no_match____'
     - all-globs-to-all-files: '____no_match____'
@@ -68,7 +68,7 @@ self-test-any-ci2:
 self-test-all-ci:
 - all:
   - changed-files:
-    - any-glob-to-any-file  : '.github/*'
+    - any-glob-to-any-file  : '.github/**'
       any-glob-to-all-files : '____no_match____'
       all-globs-to-any-file : '____no_match____'
       all-globs-to-all-files: '____no_match____'
