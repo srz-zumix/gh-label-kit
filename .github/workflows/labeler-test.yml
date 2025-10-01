@@ -54,3 +54,54 @@ jobs:
           LABEL_KIT_ALL_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
         run: |
           test "${LABELER_ALL_LABELS}" == "${LABEL_KIT_ALL_LABELS}"
+
+  sync-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit sync-enable
+        id: sync-enable
+        run: |
+          MATCHED_LABELS=$(go run . labeler \
+            --config .github/labeler-sync-test-enable.yml \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            1)
+          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+      - name: Label-kit sync-disable
+        id: sync-disable
+        run: |
+          MATCHED_LABELS=$(go run . labeler \
+            --config .github/labeler-sync-test-disable.yml \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            1)
+          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+      - name: Test
+        env:
+          SYNC_ENABLE_LABELS: ${{ steps.sync-enable.outputs.labels }}
+          SYNC_DISABLE_LABELS: ${{ steps.sync-disable.outputs.labels }}
+        run: |
+          test "${SYNC_ENABLE_LABELS}" == "sync-test"
+          test "${SYNC_DISABLE_LABELS}" == ""
