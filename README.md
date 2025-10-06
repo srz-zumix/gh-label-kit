@@ -2,6 +2,14 @@
 
 gh-label-kit is a set of gh extension commands for GitHub label management and auto-labeling.
 
+## Installation
+
+To install the tool, you can use the following command:
+
+```sh
+gh extension install srz-zumix/gh-label-kit
+```
+
 ## Commands & Usage
 
 ---
