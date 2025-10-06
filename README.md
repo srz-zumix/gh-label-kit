@@ -17,63 +17,171 @@ gh extension install srz-zumix/gh-label-kit
 ### labeler: Auto-label PRs
 
 ```sh
-gh labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>]
+gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>] [--name-only] [--ref <string>]
 ```
 
-Automatically add or remove labels to GitHub Pull Requests based on changed files, branch names, and a YAML config file (default: .github/labeler.yml).
-This command behaves the same as [actions/labeler][labeler].
+Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, and a YAML config file (default: .github/labeler.yml).
+Supports glob/regex patterns and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler].
 
-- Supports multiple PR numbers at once
-- Supports glob/regex/negative lookahead patterns
-- --sync: Remove labels that do not match any condition
-- --dryrun/-n: Show results without actually changing labels
-- --repo/-R: Target repository (default: current)
-- --config: Path to config file (default: .github/labeler.yml)
-- --color: Control color output
+- --color: Use color in diff output (auto|never|always, default: auto)
+- --config: Path to labeler config YAML file (default: .github/labeler.yml)
+- --dryrun/-n: Dry run: do not actually set labels
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --name-only: Output only team names
+- --ref: Git reference (branch, tag, or commit SHA) to load config from repository
+- --repo/-R: Target repository in the format 'owner/repo'
+- --sync: Remove labels not matching any condition
+- --template/-t: Format JSON output using a Go template
 
 ---
 
-### repo copy: Bulk copy labels
+### repo copy: Copy labels between repositories
 
 ```sh
-gh repo copy <src> <dst...> [--force]
+gh label-kit repo copy <dst-repository...> [--repo <owner/repo>] [--force]
 ```
 
-Copy labels from the src repository to one or more dst repositories.
+Copy all labels from the source repository to the destination repositories. If a label already exists in the destination, it will be skipped unless --force is specified.
 
-- --force: Overwrite existing labels
-- Multiple dst repositories supported
+- --force/-f: Overwrite existing labels in the destination repository
+- --repo/-R: Repository in the format 'owner/repo' (source repository)
 
 ---
 
 ### repo list: List labels
 
 ```sh
-gh repo list [--repo <owner/repo>]
+gh label-kit repo list [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
 ```
 
-Show all labels in the specified repository.
+List all labels in the specified repository.
 
-- --repo/-R: Target repository (default: current)
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
 
 ---
 
 ### repo sync: Sync label differences
 
 ```sh
-gh repo sync <src> <dst...>
+gh label-kit repo sync <dst-repository...> [--repo <owner/repo>] [--force]
 ```
 
-Synchronize label differences from src to one or more dst repositories.
+Sync all labels from the source repository to the destination repositories. If a label already exists in the destination, it will be updated if --force is specified.
+
+- --force/-f: Overwrite existing labels in the destination repository
+- --repo/-R: The repository in the format 'owner/repo' (source repository)
 
 ---
 
-### runner list: List GitHub Actions Runners
+### runner list: List GitHub Actions runner labels
 
 ```sh
-gh runner list [--repo <owner/repo>]
+gh label-kit runner list [--repo <owner/repo>] [--owner <organization>] [--format <json>] [--jq <expression>] [--template <string>]
 ```
 
-Show all GitHub Actions Runners for a repository or organization.
+List all GitHub Actions runner labels in the specified repository.
+
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --owner: Specify the organization name
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### issue add: Add label(s) to issue
+
+```sh
+gh label-kit issue add <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Add one or more labels to a issue in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### issue clear: Remove all labels from issue
+
+```sh
+gh label-kit issue clear <number> [--repo <owner/repo>]
+```
+
+Remove all labels from a issue in the repository.
+
+- --repo/-R: Repository in the format 'owner/repo'
+
+---
+
+### issue list: List labels for issue
+
+```sh
+gh label-kit issue list <number> [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+List all labels attached to a issue in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### issue remove: Remove label(s) from issue
+
+```sh
+gh label-kit issue remove <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Remove one or more labels from a issue in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### issue set: Set labels for issue (replace all)
+
+```sh
+gh label-kit issue set <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Set (replace) all labels for a issue in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### milestone list: List labels for milestone
+
+```sh
+gh label-kit milestone list <milestone> [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+List all labels attached to issues and PRs in the specified milestone.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
 
 [labeler]: https://github.com/actions/labeler
