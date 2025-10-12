@@ -9,7 +9,7 @@
 #   - all
 registries:
 - type: standard
-  ref: v4.419.0 # renovate: depName=aquaproj/aqua-registry
+  ref: v4.426.0 # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: suzuki-shunsuke/pinact@v3.4.2
   tags:
