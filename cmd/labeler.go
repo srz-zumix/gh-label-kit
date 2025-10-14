@@ -86,6 +86,10 @@ func NewLabelerCmd() *cobra.Command {
 						if err != nil {
 							return fmt.Errorf("failed to set labels for PR %s: %w", prNumber, err)
 						}
+						_, err = labeler.SetReviewers(ctx, client, repository, pr, result.AddTo(), cfg)
+						if err != nil {
+							return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
+						}
 					} else {
 						_, err = labeler.EditLabelsByConfig(ctx, client, repository, labels, cfg)
 						if err != nil {

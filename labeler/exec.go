@@ -28,3 +28,11 @@ func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Reposito
 	}
 	return labels, nil
 }
+
+func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, addLabels []string, cfg LabelerConfig) (*github.PullRequest, error) {
+	codeowners := CollectCodeowners(addLabels, cfg)
+	if len(codeowners) == 0 {
+		return pr, nil
+	}
+	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
+}
