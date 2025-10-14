@@ -8,6 +8,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/google/go-github/v73 v73.0.0
 	github.com/srz-zumix/go-gh-extension v0.1.17
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 )
 
 require (

@@ -7,6 +7,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/google/go-github/v73/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
+	"golang.org/x/exp/maps"
 )
 
 func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, allLebels []string, cfg LabelerConfig) ([]*github.Label, error) {
@@ -30,9 +31,11 @@ func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Reposito
 }
 
 func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, addLabels []string, cfg LabelerConfig) (*github.PullRequest, error) {
-	codeowners := CollectCodeowners(addLabels, cfg)
+	codeowners := CollectCodeownersSet(addLabels, cfg)
+	author := pr.GetUser().GetLogin()
+	delete(codeowners, author)
 	if len(codeowners) == 0 {
 		return pr, nil
 	}
-	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
+	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(maps.Keys(codeowners)))
 }
