@@ -157,8 +157,11 @@ jobs:
             21)
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test reviewers
-        run: |
-          gh pr view 21 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login' | grep -q 'srz-zumix'
+        uses: srz-zumix/retry-run-action@40be8edc05d941572a6238c37c629cc408014d10 # v0.3.0
+        with:
+          run: |
+            sleep 5
+            gh pr view 21 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login' | grep -q 'srz-zumix'
       - name: Label-kit codeowners-disable
         run: |
           gh pr edit 21 --remove-reviewer srz-zumix
