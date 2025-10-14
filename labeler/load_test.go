@@ -183,3 +183,32 @@ ci:
 		t.Errorf("expected no matchers for ci, got %d", len(lc.Matcher))
 	}
 }
+
+func TestLoadConfig_Codeowners(t *testing.T) {
+	yamlContent := `
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "backend/**"
+  - codeowners:
+      - backend/owner1
+      - backend/owner2
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 1 label, got %d", len(cfg))
+	}
+	lc, ok := cfg["backend"]
+	if !ok {
+		t.Errorf("backend not loaded")
+	}
+	if len(lc.Matcher) != 1 {
+		t.Errorf("expected 1 matcher for backend, got %d", len(lc.Matcher))
+	}
+	if len(lc.Codeowners) != 2 {
+		t.Errorf("expected 2 codeowners entries, got %d", len(lc.Codeowners))
+	}
+}
