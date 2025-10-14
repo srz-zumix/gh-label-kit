@@ -4,5 +4,4 @@ sync-test:
     - '**'
 - codeowners:
   - srz-zumix
-  - srz-zumix-bot
 

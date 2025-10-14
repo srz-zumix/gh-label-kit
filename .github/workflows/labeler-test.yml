@@ -135,8 +135,7 @@ jobs:
       - name: Build
         run: go build ./...
 
-      - name: Label-kit codeowners-enable
-        id: sync-enable
+      - name: Label-kit codeowners-enable (author is not reviewer)
         run: |
           MATCHED_LABELS=$(go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
@@ -146,17 +145,21 @@ jobs:
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test reviewers
         run: |
-          gh pr view 1 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login' | grep -q 'srz-zumix'
-      - name: Label-kit codeowners-disable
-        id: sync-disable
+          REVIEWERS=$(gh pr view 1 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login')
+          test "${REVIEWERS}" == ""
+
+      - name: Label-kit codeowners-enable
         run: |
           MATCHED_LABELS=$(go run . labeler \
-            --config .github/labeler-codeowners-test-disable.yml \
+            --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            1)
+            21)
           echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
       - name: Test reviewers
         run: |
-          REVIEWERS=$(gh pr view 1 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login')
-          test "${REVIEWERS}" == ""
+          gh pr view 21 --json reviewRequests --jq '.reviewRequests[].requestedReviewer.login' | grep -q 'srz-zumix'
+      - name: Label-kit codeowners-disable
+        run: |
+          gh pr edit 21 --remove-reviewer srz-zumix
+
