@@ -148,7 +148,18 @@ jobs:
           REVIEWERS=$(gh pr view 5 --json reviewRequests --jq '.reviewRequests[].login')
           test "${REVIEWERS}" == ""
 
-      - name: Label-kit codeowners-enable
+      - &label-kit-codeowners-disable-21
+        name: Label-kit codeowners-disable
+        run: |
+          MATCHED_LABELS=$(go run . labeler \
+            --config .github/labeler-codeowners-test-disable.yml \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            21)
+          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+
+      - &label-kit-codeowners-enable-21
+        name: Label-kit codeowners-enable
         run: |
           MATCHED_LABELS=$(go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
@@ -164,4 +175,11 @@ jobs:
       - name: Label-kit codeowners-disable
         run: |
           gh pr edit 21 --remove-reviewer srz-zumix
-
+      - *label-kit-codeowners-enable-21
+      - name: Test reviewers
+        uses: srz-zumix/retry-run-action@40be8edc05d941572a6238c37c629cc408014d10 # v0.3.0
+        with:
+          run: |
+            REVIEWERS=$(gh pr view 5 --json reviewRequests --jq '.reviewRequests[].login')
+            test "${REVIEWERS}" == ""
+      - *label-kit-codeowners-disable-21
