@@ -74,6 +74,10 @@ func NewLabelerCmd() *cobra.Command {
 				if dryrun {
 					if result.HasDiff(syncLabels) {
 						fmt.Printf("Would set labels for PR #%s: %v to %v\n", prNumber, result.Current, allLabels)
+						codeowners := labeler.GetReviewers(ctx, client, repository, pr, result.AddTo(), cfg)
+						if len(codeowners) > 0 {
+							fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
+						}
 					} else {
 						fmt.Printf("No label changes for PR #%s: %v\n", prNumber, allLabels)
 					}

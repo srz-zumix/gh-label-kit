@@ -30,12 +30,15 @@ func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Reposito
 	return labels, nil
 }
 
-func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, addLabels []string, cfg LabelerConfig) (*github.PullRequest, error) {
+func GetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, addLabels []string, cfg LabelerConfig) []string {
 	codeowners := CollectCodeownersSet(addLabels, cfg)
+	codeowners = ExpandCodeownersSet(ctx, g, repo, codeowners, cfg)
 	author := pr.GetUser().GetLogin()
 	delete(codeowners, author)
-	if len(codeowners) == 0 {
-		return pr, nil
-	}
-	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(maps.Keys(codeowners)))
+	return maps.Keys(codeowners)
+}
+
+func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, addLabels []string, cfg LabelerConfig) (*github.PullRequest, error) {
+	codeowners := GetReviewers(ctx, g, repo, pr, addLabels, cfg)
+	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
 }
