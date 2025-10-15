@@ -137,12 +137,11 @@ jobs:
 
       - name: Label-kit codeowners-enable (author is not reviewer)
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            5)
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+            5
       - name: Test reviewers
         run: |
           REVIEWERS=$(gh pr view 5 --json reviewRequests --jq '.reviewRequests[].login')
@@ -151,22 +150,20 @@ jobs:
       - &label-kit-codeowners-disable-21
         name: Label-kit codeowners-disable
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config .github/labeler-codeowners-test-disable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            21)
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+            21
 
       - &label-kit-codeowners-enable-21
         name: Label-kit codeowners-enable
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            21)
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+            21
       - name: Test reviewers
         uses: srz-zumix/retry-run-action@40be8edc05d941572a6238c37c629cc408014d10 # v0.3.0
         with:
@@ -183,3 +180,20 @@ jobs:
             REVIEWERS=$(gh pr view 5 --json reviewRequests --jq '.reviewRequests[].login')
             test "${REVIEWERS}" == ""
       - *label-kit-codeowners-disable-21
+
+      - name: Label-kit codeowners-enable (invalid user)
+        id: codeowners-invalid-user
+        continue-on-error: true
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-invalid-user.yml \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            5
+      - name: Test reviewers
+        env:
+          CODEOWNERS_INVALID_USER_OUTCOME: ${{ steps.codeowners-invalid-user.outcome }}
+        run: |
+          REVIEWERS=$(gh pr view 5 --json reviewRequests --jq '.reviewRequests[].login')
+          test "${REVIEWERS}" == ""
+          test "${CODEOWNERS_INVALID_USER_OUTCOME}" == "failure"
