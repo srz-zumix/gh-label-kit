@@ -198,8 +198,10 @@ jobs:
           gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login' | grep -q 'srz-zumix'
       - &remove-reviewer
         name: Remove reviewer
-        run: |
-          gh pr edit "${TARGET_PR_NUMBER}" --remove-reviewer srz-zumix
+        uses: srz-zumix/retry-run-action@40be8edc05d941572a6238c37c629cc408014d10 # v0.3.0
+        with:
+          run: |
+            gh pr edit "${TARGET_PR_NUMBER}" --remove-reviewer srz-zumix
       - *label-kit-codeowners-enable
       - *test-reviewers-empty
       - name: Label-kit codeowners-enable (always request)
