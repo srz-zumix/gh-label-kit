@@ -153,6 +153,14 @@ jobs:
         run: |
           REVIEWERS=$(gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login')
           test "${REVIEWERS}" == ""
+      - &label-kit-codeowners-disable
+        name: Label-kit codeowners-disable
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-disable.yml \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            "${TARGET_PR_NUMBER}"
 
       #
       # Test that review requests invalid user are ignored
@@ -175,21 +183,14 @@ jobs:
           REVIEWERS=$(gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login')
           test "${REVIEWERS}" == ""
           test "${CODEOWNERS_INVALID_USER_OUTCOME}" == "failure"
+      - *label-kit-codeowners-disable
 
       #
       # Test that review requests
       #
       - name: Set TARGET_PR_NUMBER 21
         run: echo "TARGET_PR_NUMBER=21" >> ${GITHUB_ENV}
-      - &label-kit-codeowners-disable
-        name: Label-kit codeowners-disable
-        run: |
-          go run . labeler \
-            --config .github/labeler-codeowners-test-disable.yml \
-            --sync \
-            --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
-
+      - *label-kit-codeowners-disable
       - *label-kit-codeowners-enable
       - &test-reviewers-srz-zumix
         name: Test reviewers
