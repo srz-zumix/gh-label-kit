@@ -3,11 +3,11 @@ package labeler
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/google/go-github/v73/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
-	"golang.org/x/exp/maps"
 )
 
 func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, allLebels []string, cfg LabelerConfig) ([]*github.Label, error) {
