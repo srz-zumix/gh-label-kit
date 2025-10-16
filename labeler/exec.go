@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/google/go-github/v73/github"
@@ -44,7 +45,7 @@ func GetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repos
 			delete(codeowners, r.GetLogin())
 		}
 	}
-	return maps.Keys(codeowners)
+	return slices.Collect(maps.Keys(codeowners))
 }
 
 func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, labels []string, cfg LabelerConfig) ([]string, *github.PullRequest, error) {
