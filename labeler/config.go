@@ -1,13 +1,17 @@
 package labeler
 
 import (
+	"maps"
+	"slices"
+
 	"gopkg.in/yaml.v3"
 )
 
 type LabelerConfig map[string]LabelerLabelConfig
 type LabelerLabelConfig struct {
-	Matcher []LabelerMatch
-	Color   string
+	Matcher    []LabelerMatch
+	Color      string
+	Codeowners []string
 }
 
 type LabelerMatch struct {
@@ -26,6 +30,7 @@ type labelerYamlMatch struct {
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
 	Color        string             `yaml:"color,omitempty"`
+	Codeowners   StringOrSlice      `yaml:"codeowners,omitempty"`
 }
 
 type LabelerRule struct {
@@ -120,6 +125,16 @@ func colorOfLabel(matches []labelerYamlMatch) string {
 	return ""
 }
 
+func codeownersOfLabel(matches []labelerYamlMatch) []string {
+	ownerSet := make(map[string]struct{})
+	for _, m := range matches {
+		for _, owner := range m.Codeowners {
+			ownerSet[owner] = struct{}{}
+		}
+	}
+	return slices.Collect(maps.Keys(ownerSet))
+}
+
 func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 	cfg := make(LabelerConfig, len(*r))
 	for label, matches := range *r {
@@ -134,8 +149,9 @@ func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 			}
 		}
 		cfg[label] = LabelerLabelConfig{
-			Matcher: matchers,
-			Color:   colorOfLabel(matches),
+			Matcher:    matchers,
+			Color:      colorOfLabel(matches),
+			Codeowners: codeownersOfLabel(matches),
 		}
 	}
 	return cfg

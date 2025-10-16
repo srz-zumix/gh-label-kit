@@ -29,6 +29,7 @@ func NewLabelerCmd() *cobra.Command {
 	var syncLabels bool
 	var dryrun bool
 	var ref string
+	var reviewRequest string
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
@@ -70,12 +71,17 @@ func NewLabelerCmd() *cobra.Command {
 
 				result := labeler.CheckMatchConfigs(cfg, changedFiles, pr)
 				allLabels := result.GetLabels(syncLabels)
+				reviewRequestLabels := labeler.GetReviewRequestTargetLabels(result, reviewRequest, syncLabels)
 
 				if dryrun {
 					if result.HasDiff(syncLabels) {
 						fmt.Printf("Would set labels for PR #%s: %v to %v\n", prNumber, result.Current, allLabels)
 					} else {
 						fmt.Printf("No label changes for PR #%s: %v\n", prNumber, allLabels)
+					}
+					codeowners := labeler.GetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					if len(codeowners) > 0 {
+						fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
 					}
 				} else {
 					renderer := render.NewRenderer(opts.Exporter)
@@ -92,6 +98,13 @@ func NewLabelerCmd() *cobra.Command {
 							return fmt.Errorf("failed to edit labels for PR %s: %w", prNumber, err)
 						}
 						renderer.WriteLine(fmt.Sprintf("No label changes for PR #%s", prNumber))
+					}
+					addedReviewers, _, err := labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					if err != nil {
+						return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
+					}
+					if len(addedReviewers) > 0 {
+						renderer.WriteLine(fmt.Sprintf("Requested reviewers for PR #%s: %v", prNumber, addedReviewers))
 					}
 					renderer.SetColor(colorFlag)
 					if nameOnly {
@@ -122,6 +135,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
+	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Control review request behavior: none (no requests), addto (request on new labels), always (request on all matched labels)")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
 	return cmd

@@ -3,6 +3,8 @@ package labeler
 import (
 	"context"
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
 	"github.com/google/go-github/v73/github"
@@ -27,4 +29,30 @@ func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Reposito
 		return labels, fmt.Errorf("label limit for a PR exceeded: not applied to PR #%d: %v", pr.GetNumber(), excessLabels)
 	}
 	return labels, nil
+}
+
+func GetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, labels []string, cfg LabelerConfig) []string {
+	if len(labels) == 0 {
+		return []string{}
+	}
+	codeowners := CollectCodeownersSet(labels, cfg)
+	codeowners = ExpandCodeownersSet(ctx, g, repo, codeowners, cfg)
+	author := pr.GetUser().GetLogin()
+	delete(codeowners, author)
+	reviewers, err := gh.ListPullRequestReviewers(ctx, g, repo, pr)
+	if err == nil {
+		for _, r := range reviewers.Users {
+			delete(codeowners, r.GetLogin())
+		}
+	}
+	return slices.Collect(maps.Keys(codeowners))
+}
+
+func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, labels []string, cfg LabelerConfig) ([]string, *github.PullRequest, error) {
+	codeowners := GetReviewers(ctx, g, repo, pr, labels, cfg)
+	if len(codeowners) == 0 {
+		return nil, pr, nil
+	}
+	pr, err := gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
+	return codeowners, pr, err
 }

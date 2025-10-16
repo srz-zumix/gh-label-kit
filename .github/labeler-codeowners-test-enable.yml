@@ -1,0 +1,8 @@
+codeowners-test:
+- changed-files:
+  - any-glob-to-any-file:
+    - '**'
+- codeowners:
+  - srz-zumix
+  - "@srz-zumix"
+
