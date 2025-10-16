@@ -10,6 +10,31 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 )
 
+const (
+	ReviewRequestModeNone   string = "none"
+	ReviewRequestModeAddTo  string = "addto"
+	ReviewRequestModeAlways string = "always"
+)
+
+var ReviewersRequestModes = []string{
+	ReviewRequestModeNone,
+	ReviewRequestModeAddTo,
+	ReviewRequestModeAlways,
+}
+
+func GetReviewRequestTargetLabels(matchResult MatchResult, reviewRequestMode string, syncLabels bool) []string {
+	switch reviewRequestMode {
+	case ReviewRequestModeNone:
+		return nil
+	case ReviewRequestModeAddTo:
+		return matchResult.AddTo()
+	case ReviewRequestModeAlways:
+		return matchResult.GetLabels(syncLabels)
+	default:
+		return nil
+	}
+}
+
 func CollectCodeownersSet(labels []string, cfg LabelerConfig) map[string]struct{} {
 	ownerSet := make(map[string]struct{})
 	for _, label := range labels {

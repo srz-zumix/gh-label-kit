@@ -29,6 +29,7 @@ func NewLabelerCmd() *cobra.Command {
 	var syncLabels bool
 	var dryrun bool
 	var ref string
+	var reviewRequest string
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
@@ -70,11 +71,12 @@ func NewLabelerCmd() *cobra.Command {
 
 				result := labeler.CheckMatchConfigs(cfg, changedFiles, pr)
 				allLabels := result.GetLabels(syncLabels)
+				reviewRequestLabels := labeler.GetReviewRequestTargetLabels(result, reviewRequest, syncLabels)
 
 				if dryrun {
 					if result.HasDiff(syncLabels) {
 						fmt.Printf("Would set labels for PR #%s: %v to %v\n", prNumber, result.Current, allLabels)
-						codeowners := labeler.GetReviewers(ctx, client, repository, pr, result.AddTo(), cfg)
+						codeowners := labeler.GetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
 						if len(codeowners) > 0 {
 							fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
 						}
@@ -90,7 +92,7 @@ func NewLabelerCmd() *cobra.Command {
 						if err != nil {
 							return fmt.Errorf("failed to set labels for PR %s: %w", prNumber, err)
 						}
-						_, err = labeler.SetReviewers(ctx, client, repository, pr, result.AddTo(), cfg)
+						_, err = labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
 						if err != nil {
 							return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
 						}
@@ -130,6 +132,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
+	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Request reviews from the specified team or user in addition to codeowners")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
 	return cmd
