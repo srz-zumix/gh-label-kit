@@ -99,9 +99,12 @@ func NewLabelerCmd() *cobra.Command {
 						}
 						renderer.WriteLine(fmt.Sprintf("No label changes for PR #%s", prNumber))
 					}
-					_, err = labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					addedReviewers, _, err := labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
 					if err != nil {
 						return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
+					}
+					if len(addedReviewers) > 0 {
+						renderer.WriteLine(fmt.Sprintf("Requested reviewers for PR #%s: %v", prNumber, addedReviewers))
 					}
 					renderer.SetColor(colorFlag)
 					if nameOnly {

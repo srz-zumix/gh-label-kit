@@ -47,10 +47,11 @@ func GetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repos
 	return maps.Keys(codeowners)
 }
 
-func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, labels []string, cfg LabelerConfig) (*github.PullRequest, error) {
+func SetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, labels []string, cfg LabelerConfig) ([]string, *github.PullRequest, error) {
 	codeowners := GetReviewers(ctx, g, repo, pr, labels, cfg)
 	if len(codeowners) == 0 {
-		return pr, nil
+		return nil, pr, nil
 	}
-	return gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
+	pr, err := gh.RequestPullRequestReviewers(ctx, g, repo, pr, gh.GetRequestedReviewers(codeowners))
+	return codeowners, pr, err
 }

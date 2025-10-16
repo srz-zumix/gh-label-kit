@@ -194,10 +194,8 @@ jobs:
       - *label-kit-codeowners-enable
       - &test-reviewers-srz-zumix
         name: Test reviewers
-        uses: srz-zumix/retry-run-action@40be8edc05d941572a6238c37c629cc408014d10 # v0.3.0
-        with:
-          run: |
-            gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login' | grep -q 'srz-zumix'
+        run: |
+          gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login' | grep -q 'srz-zumix'
       - &remove-reviewer
         name: Remove reviewer
         run: |

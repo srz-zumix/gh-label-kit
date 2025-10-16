@@ -3,5 +3,5 @@ codeowners-test:
   - any-glob-to-any-file:
     - '**'
 - codeowners:
-  - srz-zumix-bot
+  - octocat
 
