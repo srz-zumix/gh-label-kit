@@ -217,7 +217,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --review-request always \
-            --dry-run \
+            --dryrun \
             "${TARGET_PR_NUMBER}" | tee ${{ runner.temp }}/output.txt
           if grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt; then
             echo "Error: Would request reviewers even if already requested"
