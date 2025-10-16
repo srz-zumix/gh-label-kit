@@ -135,7 +135,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
-	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Request reviews from the specified team or user in addition to codeowners")
+	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Control review request behavior: none (no requests), addto (request on new labels), always (request on all matched labels)")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
 	return cmd
