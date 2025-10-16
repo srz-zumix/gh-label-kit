@@ -76,12 +76,12 @@ func NewLabelerCmd() *cobra.Command {
 				if dryrun {
 					if result.HasDiff(syncLabels) {
 						fmt.Printf("Would set labels for PR #%s: %v to %v\n", prNumber, result.Current, allLabels)
-						codeowners := labeler.GetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
-						if len(codeowners) > 0 {
-							fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
-						}
 					} else {
 						fmt.Printf("No label changes for PR #%s: %v\n", prNumber, allLabels)
+					}
+					codeowners := labeler.GetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					if len(codeowners) > 0 {
+						fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
 					}
 				} else {
 					renderer := render.NewRenderer(opts.Exporter)
@@ -92,16 +92,16 @@ func NewLabelerCmd() *cobra.Command {
 						if err != nil {
 							return fmt.Errorf("failed to set labels for PR %s: %w", prNumber, err)
 						}
-						_, err = labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
-						if err != nil {
-							return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
-						}
 					} else {
 						_, err = labeler.EditLabelsByConfig(ctx, client, repository, labels, cfg)
 						if err != nil {
 							return fmt.Errorf("failed to edit labels for PR %s: %w", prNumber, err)
 						}
 						renderer.WriteLine(fmt.Sprintf("No label changes for PR #%s", prNumber))
+					}
+					_, err = labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					if err != nil {
+						return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
 					}
 					renderer.SetColor(colorFlag)
 					if nameOnly {
