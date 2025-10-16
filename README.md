@@ -1,3 +1,5 @@
+for CODEOWNERS TEST
+
 # gh-label-kit
 
 gh-label-kit is a set of gh extension commands for GitHub label management and auto-labeling.
