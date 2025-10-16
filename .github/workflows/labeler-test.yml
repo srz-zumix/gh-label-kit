@@ -188,8 +188,8 @@ jobs:
       #
       # Test that review requests
       #
-      - name: Set TARGET_PR_NUMBER 21
-        run: echo "TARGET_PR_NUMBER=21" >> ${GITHUB_ENV}
+      - name: Set TARGET_PR_NUMBER 23
+        run: echo "TARGET_PR_NUMBER=23" >> ${GITHUB_ENV}
       - *label-kit-codeowners-disable
       - *label-kit-codeowners-enable
       - &test-reviewers-srz-zumix
