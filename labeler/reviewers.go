@@ -53,7 +53,7 @@ func CollectCodeownersSet(labels []string, cfg LabelerConfig) map[string]struct{
 func ExpandCodeownersSet(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, ownerSet map[string]struct{}, cfg LabelerConfig) map[string]struct{} {
 	expandedOwnerSet := make(map[string]struct{})
 	for config := range ownerSet {
-		if config[len(config)-3:] == "..." {
+		if len(config) >= 3 && config[len(config)-3:] == "..." {
 			owner := config[:len(config)-3]
 			if strings.Contains(owner, "/") {
 				parts := strings.SplitN(owner, "/", 2)
