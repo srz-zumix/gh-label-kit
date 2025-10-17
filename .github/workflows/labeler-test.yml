@@ -140,8 +140,7 @@ jobs:
       #
       - name: Set TARGET_PR_NUMBER 5
         run: echo "TARGET_PR_NUMBER=5" >> ${GITHUB_ENV}
-      - &label-kit-codeowners-enable
-        name: Label-kit codeowners-enable
+      - name: Label-kit codeowners-enable
         run: |
           go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
@@ -185,54 +184,97 @@ jobs:
           test "${CODEOWNERS_INVALID_USER_OUTCOME}" == "failure"
       - *label-kit-codeowners-disable
 
-      #
-      # Test that review requests
-      #
-      - name: Set TARGET_PR_NUMBER 23
-        run: echo "TARGET_PR_NUMBER=23" >> ${GITHUB_ENV}
-      - *label-kit-codeowners-disable
-      - *label-kit-codeowners-enable
-      - &test-reviewers-srz-zumix
-        name: Test reviewers
-        run: |
-          gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login' | grep -q 'srz-zumix'
-      - &remove-reviewer
-        name: Remove reviewer
-        run: |
-          gh pr edit "${TARGET_PR_NUMBER}" --remove-reviewer srz-zumix
-      - *label-kit-codeowners-enable
-      - *test-reviewers-empty
-      - name: Label-kit codeowners-enable (always request)
+  codeowners-request-mode-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      # addto reviewers
+      - name: Label-kit codeowners-enable (addto)
+        shell: bash
         run: |
           go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
-            --review-request always \
+            --dryrun \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
-      - *test-reviewers-srz-zumix
-      - name: Label-kit codeowners-enable (already requested)
+            23 | tee ${{ runner.temp }}/output.txt
+      - &test-reviewers-srz-zumix
+        name: Test reviewers
+        run: |
+          grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt
+          grep -q "srz-zumix" ${{ runner.temp }}/output.txt
+
+      - name: Label-kit codeowners-enable (addto, already labeled)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --dryrun \
+            --format json --jq '[ .[].name ] | join(",")' \
+            25 | tee ${{ runner.temp }}/output.txt
+      - &test-reviewers-no-request
+        name: Test no request
+        run: |
+          if grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt; then
+            echo "Error: Would request reviewers even if already requested"
+            exit 1
+          fi
+
+      - name: Label-kit codeowners-enable (addto, already requested)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --dryrun \
+            --format json --jq '[ .[].name ] | join(",")' \
+            27 | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-no-request
+
+      # always request
+      - name: Label-kit codeowners-enable (always)
+        shell: bash
         run: |
           go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --review-request always \
             --dryrun \
-            "${TARGET_PR_NUMBER}" | tee ${{ runner.temp }}/output.txt
-          if grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt; then
-            echo "Error: Would request reviewers even if already requested"
-            exit 1
-          fi
-      - *remove-reviewer
-      - *label-kit-codeowners-disable
-      - *test-reviewers-empty
+            --format json --jq '[ .[].name ] | join(",")' \
+            25 | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-srz-zumix
+
+      # none request
       - name: Label-kit codeowners-enable (none request)
+        shell: bash
         run: |
           go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --review-request none \
+            --dryrun \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
-      - *test-reviewers-empty
-      - *label-kit-codeowners-disable
+            23 | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-no-request
