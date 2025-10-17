@@ -222,8 +222,8 @@ jobs:
       - &test-reviewers-srz-zumix
         name: Test reviewers
         run: |
-          grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt
-          grep -q "srz-zumix" ${{ runner.temp }}/output.txt
+          grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
+          grep -q "srz-zumix" "${RUNNER_TEMP}/output.txt"
 
       - name: Label-kit codeowners-enable (addto, already labeled)
         shell: bash
@@ -237,7 +237,7 @@ jobs:
       - &test-reviewers-no-request
         name: Test no request
         run: |
-          if grep -q "Would request reviewers for PR" ${{ runner.temp }}/output.txt; then
+          if grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"; then
             echo "Error: Would request reviewers even if already requested"
             exit 1
           fi
