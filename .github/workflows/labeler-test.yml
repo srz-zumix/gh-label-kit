@@ -278,3 +278,19 @@ jobs:
             --format json --jq '[ .[].name ] | join(",")' \
             23 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
+
+      - name: Label-kit codeowners-enable (expand-fallback)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-expand-fallback.yml \
+            --sync \
+            --review-request always \
+            --dryrun \
+            --format json --jq '[ .[].name ] | join(",")' \
+            25 | tee ${{ runner.temp }}/output.txt
+      - name: Test reviewers (expand fallback)
+        run: |
+          grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
+          grep -q "srz-zumix/team" "${RUNNER_TEMP}/output.txt"
+
