@@ -2,7 +2,9 @@ package labeler
 
 import (
 	"context"
+	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -62,8 +64,10 @@ func ExpandCodeownersSet(ctx context.Context, g *gh.GitHubClient, repo repositor
 					for _, member := range members {
 						expandedOwnerSet[member.GetLogin()] = struct{}{}
 					}
+					continue
+				} else {
+					fmt.Fprintf(os.Stderr, "failed to expand team %s: %v", owner, err)
 				}
-				continue
 			}
 			expandedOwnerSet[owner] = struct{}{}
 		} else {
