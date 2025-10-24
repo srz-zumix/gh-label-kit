@@ -266,7 +266,7 @@ jobs:
             --review-request always \
             --dryrun \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
       # none request
