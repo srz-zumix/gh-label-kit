@@ -1,5 +1,7 @@
 # gh-label-kit
 
+asis-author-pr test
+
 gh-label-kit is a set of gh extension commands for GitHub label management and auto-labeling.
 
 ## Installation
