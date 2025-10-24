@@ -8,6 +8,7 @@ env:
   LABELED_NO_REQUEST_PR: 38
   NO_LABEL_REQUESTED_PR: 39
   DRAFT_NO_LABEL_NO_REQUEST_PR: 40
+  CLOSED_NO_LABEL_NO_REQUEST_PR: 23
 
 jobs:
   labeler-test:
@@ -187,6 +188,26 @@ jobs:
           test "${CODEOWNERS_INVALID_USER_OUTCOME}" == "failure"
       - *label-kit-codeowners-disable
 
+      #
+      # Test closed PR does not request reviewers
+      #
+      - name: Label-kit codeowners-enable (closed PR)
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --dryrun \
+            --format json --jq '[ .[].name ] | join(",")' \
+            "${CLOSED_NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+      - &test-reviewers-no-request
+        name: Test no request
+        run: |
+          if grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"; then
+            echo "Error: Would request reviewers even if already requested"
+            exit 1
+          fi
+
+
   codeowners-request-mode-test:
     permissions:
       contents: read
@@ -220,7 +241,6 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - &test-reviewers-srz-zumix
         name: Test reviewers
@@ -235,15 +255,8 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
-      - &test-reviewers-no-request
-        name: Test no request
-        run: |
-          if grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"; then
-            echo "Error: Would request reviewers even if already requested"
-            exit 1
-          fi
+      - *test-reviewers-no-request
 
       - name: Label-kit codeowners-enable (addto, already requested)
         shell: bash
@@ -252,7 +265,6 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${NO_LABEL_REQUESTED_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
@@ -265,7 +277,6 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
@@ -278,7 +289,6 @@ jobs:
             --sync \
             --review-request none \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
@@ -315,7 +325,6 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
             "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - name: Test reviewers (expand fallback)
         run: |
