@@ -35,6 +35,9 @@ func GetReviewers(ctx context.Context, g *gh.GitHubClient, repo repository.Repos
 	if len(labels) == 0 {
 		return []string{}
 	}
+	if pr.GetState() != "open" {
+		return []string{}
+	}
 	codeowners := CollectCodeownersSet(labels, cfg)
 	codeowners = ExpandCodeownersSet(ctx, g, repo, codeowners, cfg)
 	author := pr.GetUser().GetLogin()
