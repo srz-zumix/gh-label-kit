@@ -2,6 +2,14 @@ name: "Labeler Test"
 on:
 - pull_request
 
+env:
+  ASIS_AUTHOR_PR: 41
+  NO_LABEL_NO_REQUEST_PR: 37
+  LABELED_NO_REQUEST_PR: 38
+  NO_LABEL_REQUESTED_PR: 39
+  DRAFT_NO_LABEL_NO_REQUEST_PR: 40
+  CLOSED_NO_LABEL_NO_REQUEST_PR: 23
+
 jobs:
   labeler-test:
     permissions:
@@ -138,19 +146,17 @@ jobs:
       #
       # Test that review requests cannot be sent to the author
       #
-      - name: Set TARGET_PR_NUMBER 5
-        run: echo "TARGET_PR_NUMBER=5" >> ${GITHUB_ENV}
       - name: Label-kit codeowners-enable
         run: |
           go run . labeler \
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
+            "${ASIS_AUTHOR_PR}"
       - &test-reviewers-empty
         name: Test reviewers (should have not reviewers)
         run: |
-          REVIEWERS=$(gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login')
+          REVIEWERS=$(gh pr view "${ASIS_AUTHOR_PR}" --json reviewRequests --jq '.reviewRequests[].login')
           test "${REVIEWERS}" == ""
       - &label-kit-codeowners-disable
         name: Label-kit codeowners-disable
@@ -159,13 +165,11 @@ jobs:
             --config .github/labeler-codeowners-test-disable.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
+            "${ASIS_AUTHOR_PR}"
 
       #
       # Test that review requests invalid user are ignored
       #
-      - name: Set TARGET_PR_NUMBER 5
-        run: echo "TARGET_PR_NUMBER=5" >> ${GITHUB_ENV}
       - name: Label-kit codeowners-enable (invalid user)
         id: codeowners-invalid-user
         continue-on-error: true
@@ -174,15 +178,35 @@ jobs:
             --config .github/labeler-codeowners-test-invalid-user.yml \
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${TARGET_PR_NUMBER}"
+            "${ASIS_AUTHOR_PR}"
       - name: Test reviewers
         env:
           CODEOWNERS_INVALID_USER_OUTCOME: ${{ steps.codeowners-invalid-user.outcome }}
         run: |
-          REVIEWERS=$(gh pr view "${TARGET_PR_NUMBER}" --json reviewRequests --jq '.reviewRequests[].login')
+          REVIEWERS=$(gh pr view "${ASIS_AUTHOR_PR}" --json reviewRequests --jq '.reviewRequests[].login')
           test "${REVIEWERS}" == ""
           test "${CODEOWNERS_INVALID_USER_OUTCOME}" == "failure"
       - *label-kit-codeowners-disable
+
+      #
+      # Test closed PR does not request reviewers
+      #
+      - name: Label-kit codeowners-enable (closed PR)
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --dryrun \
+            --format json --jq '[ .[].name ] | join(",")' \
+            "${CLOSED_NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+      - &test-reviewers-no-request
+        name: Test no request
+        run: |
+          if grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"; then
+            echo "Error: Would request reviewers even if already requested"
+            exit 1
+          fi
+
 
   codeowners-request-mode-test:
     permissions:
@@ -217,8 +241,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            23 | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - &test-reviewers-srz-zumix
         name: Test reviewers
         run: |
@@ -232,15 +255,8 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            25 | tee ${{ runner.temp }}/output.txt
-      - &test-reviewers-no-request
-        name: Test no request
-        run: |
-          if grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"; then
-            echo "Error: Would request reviewers even if already requested"
-            exit 1
-          fi
+            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-no-request
 
       - name: Label-kit codeowners-enable (addto, already requested)
         shell: bash
@@ -249,8 +265,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            27 | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_REQUESTED_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       # always request
@@ -262,8 +277,7 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            25 | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
       # none request
@@ -275,8 +289,7 @@ jobs:
             --sync \
             --review-request none \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            23 | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
   codeowners-expand-fallback-test:
@@ -312,8 +325,7 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            25 | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
       - name: Test reviewers (expand fallback)
         run: |
           grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
