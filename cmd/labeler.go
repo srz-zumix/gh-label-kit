@@ -71,7 +71,8 @@ func NewLabelerCmd() *cobra.Command {
 
 				result := labeler.CheckMatchConfigs(cfg, changedFiles, pr)
 				allLabels := result.GetLabels(syncLabels)
-				reviewRequestLabels := labeler.GetReviewRequestTargetLabels(result, reviewRequest, syncLabels)
+				labeledCodeOwners := labeler.NewLabeledCodeOwners(ctx, client, repository, pr, cfg, reviewRequest)
+				reviewRequestLabels := labeler.GetReviewRequestTargetLabels(pr, result, reviewRequest, syncLabels)
 
 				if dryrun {
 					if result.HasDiff(syncLabels) {
@@ -79,7 +80,7 @@ func NewLabelerCmd() *cobra.Command {
 					} else {
 						fmt.Printf("No label changes for PR #%s: %v\n", prNumber, allLabels)
 					}
-					codeowners := labeler.GetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					codeowners := labeledCodeOwners.GetReviewers(reviewRequestLabels)
 					if len(codeowners) > 0 {
 						fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
 					}
@@ -99,7 +100,7 @@ func NewLabelerCmd() *cobra.Command {
 						}
 						renderer.WriteLine(fmt.Sprintf("No label changes for PR #%s", prNumber))
 					}
-					addedReviewers, _, err := labeler.SetReviewers(ctx, client, repository, pr, reviewRequestLabels, cfg)
+					addedReviewers, _, err := labeledCodeOwners.SetReviewers(reviewRequestLabels)
 					if err != nil {
 						return fmt.Errorf("failed to set reviewers for PR %s: %w", prNumber, err)
 					}
