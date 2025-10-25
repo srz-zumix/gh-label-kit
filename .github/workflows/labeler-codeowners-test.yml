@@ -13,8 +13,8 @@ env:
   LABELED_NO_REQUEST_PR: 38
   NO_LABEL_REQUESTED_PR: 39
   DRAFT_NO_LABEL_NO_REQUEST_PR: 40
-  NO_LABEL_REVIEWED_PR: 44
-  NO_LABEL_REVIEWED_LAST_COMMIT_PR: 46
+  NO_LABEL_REVIEWED_PR: 46
+  NO_LABEL_REVIEWED_LAST_COMMIT_PR: 44
   CLOSED_NO_LABEL_NO_REQUEST_PR: 23
 
 jobs:
@@ -362,6 +362,7 @@ jobs:
             --dryrun \
             "${NO_LABEL_REVIEWED_LAST_COMMIT_PR}" | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
+
       - name: Label-kit codeowners-enable (always, already reviewed)
         shell: bash
         run: |
