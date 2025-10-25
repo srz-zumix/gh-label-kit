@@ -1,127 +1,94 @@
 package labeler
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/google/go-github/v73/github"
 )
 
-func TestCheckMatchConfigs_BranchAndFiles_Any(t *testing.T) {
-	cfg := LabelerConfig{
-		"label1": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{
-					ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}},
-					BaseBranch:   []any{"regexp"},
-					HeadBranch:   []any{"regexp"},
-				}}},
-			},
-		},
-		"label2": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{
-					ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"hoge"}}},
-					BaseBranch:   []any{"base-branch"},
-					HeadBranch:   []any{"regexp"},
-				}}},
-			},
-		},
-		"label3": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{
-					ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"hoge"}}},
-					BaseBranch:   []any{"regexp"},
-					HeadBranch:   []any{"head-branch"},
-				}}},
-			},
-		},
-	}
+func TestCheckMatchConfigs(t *testing.T) {
 	pr := &github.PullRequest{
 		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
 		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
-	if !result.IsMatched("label1") {
-		t.Errorf("label1 should be matched")
-	}
-	if !result.IsMatched("label2") {
-		t.Errorf("label2 should be matched")
-	}
-	if !result.IsMatched("label3") {
-		t.Errorf("label3 should be matched")
-	}
-}
 
-func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
-	cfg := LabelerConfig{
-		"label1": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}}}},
-				{Any: []LabelerRule{{HeadBranch: []any{"regexp"}}}},
-				{Any: []LabelerRule{{BaseBranch: []any{"regexp"}}}},
+	testCases := []struct {
+		name   string
+		config LabelerConfig
+		pr     *github.PullRequest
+		files  []*github.CommitFile
+		want   map[string]bool
+	}{
+		{
+			name: "BranchAndFiles_Any",
+			config: LabelerConfig{
+				"label1": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}, BaseBranch: []any{"regexp"}, HeadBranch: []any{"regexp"}}}}}},
+				"label2": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"hoge"}}}, BaseBranch: []any{"base-branch"}, HeadBranch: []any{"regexp"}}}}}},
+				"label3": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"hoge"}}}, BaseBranch: []any{"regexp"}, HeadBranch: []any{"head-branch"}}}}}},
+			},
+			pr:    pr,
+			files: files,
+			want: map[string]bool{
+				"label1": true,
+				"label2": true,
+				"label3": true,
 			},
 		},
-		"label2": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}}}},
-				{Any: []LabelerRule{{HeadBranch: []any{"head-branch"}}}},
-				{Any: []LabelerRule{{BaseBranch: []any{"base-branch"}}}},
+		{
+			name: "BranchAndFiles_AnyArray",
+			config: LabelerConfig{
+				"label1": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}}}}, {Any: []LabelerRule{{HeadBranch: []any{"regexp"}}}}, {Any: []LabelerRule{{BaseBranch: []any{"regexp"}}}}}},
+				"label2": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}}}}, {Any: []LabelerRule{{HeadBranch: []any{"head-branch"}}}}, {Any: []LabelerRule{{BaseBranch: []any{"base-branch"}}}}}},
+			},
+			pr:    pr,
+			files: files,
+			want: map[string]bool{
+				"label1": false,
+				"label2": true,
 			},
 		},
-	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
-	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
-	if result.IsMatched("label1") {
-		t.Errorf("label1 should not be matched")
-	}
-	if !result.IsMatched("label2") {
-		t.Errorf("label2 should be matched")
-	}
-}
-
-func TestCheckMatchConfigs_BranchAndFiles_ColorOnly(t *testing.T) {
-	cfg := LabelerConfig{
-		"label1": LabelerLabelConfig{
-			Color: "ff0000",
+		{
+			name: "ColorOnly",
+			config: LabelerConfig{
+				"label1": {Color: "ff0000"},
+			},
+			pr:    pr,
+			files: files,
+			want: map[string]bool{
+				"label1": false,
+			},
 		},
-	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
-	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
-	if result.IsMatched("label1") {
-		t.Errorf("label1 should not be matched")
-	}
-}
-
-func TestCheckMatchConfigs_RegexAndDotOption(t *testing.T) {
-	cfg := LabelerConfig{
-		"dotlabel": LabelerLabelConfig{
-			Matcher: []LabelerMatch{
-				{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"*.txt"}}}}}},
+		{
+			name: "RegexAndDotOption",
+			config: LabelerConfig{
+				"dotlabel": {Matcher: []LabelerMatch{{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"*.txt"}}}}}}}},
+			},
+			pr: &github.PullRequest{
+				Base:   &github.PullRequestBranch{Ref: github.Ptr("main")},
+				Head:   &github.PullRequestBranch{Ref: github.Ptr("feature/abc")},
+				Labels: []*github.Label{},
+			},
+			files: []*github.CommitFile{{Filename: github.Ptr(".foo.txt")}},
+			want: map[string]bool{
+				"dotlabel": true,
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("main")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("feature/abc")},
-		Labels: []*github.Label{},
-	}
-	files := []*github.CommitFile{{Filename: github.Ptr(".foo.txt")}}
-	// matchGlob uses doublestar, which matches dotfiles by default
-	result := CheckMatchConfigs(cfg, files, pr)
 
-	if !result.IsMatched("dotlabel") {
-		t.Errorf("dotlabel should be matched for dotfile")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := CheckMatchConfigs(tc.config, tc.files, tc.pr)
+			got := make(map[string]bool)
+			for label := range tc.config {
+				got[label] = result.IsMatched(label)
+			}
+
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("CheckMatchConfigs() = %v, want %v", got, tc.want)
+			}
+		})
 	}
 }
