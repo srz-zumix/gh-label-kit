@@ -13,8 +13,8 @@ env:
   LABELED_NO_REQUEST_PR: 38
   NO_LABEL_REQUESTED_PR: 39
   DRAFT_NO_LABEL_NO_REQUEST_PR: 40
-  NO_LABEL_REVIEWED_PR: 42
-  NO_LABEL_REVIEWED_LAST_COMMIT_PR: 42
+  NO_LABEL_REVIEWED_PR: 44
+  NO_LABEL_REVIEWED_LAST_COMMIT_PR: 46
   CLOSED_NO_LABEL_NO_REQUEST_PR: 23
 
 jobs:
@@ -326,4 +326,50 @@ jobs:
         run: |
           grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
           grep -q "srz-zumix/team" "${RUNNER_TEMP}/output.txt"
+
+  codeowners-review-status-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit codeowners-enable (always, already reviewed, last commit)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --review-request always \
+            --dryrun \
+            "${NO_LABEL_REVIEWED_LAST_COMMIT_PR}" | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-no-request
+      - name: Label-kit codeowners-enable (always, already reviewed)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --review-request always \
+            --dryrun \
+            "${NO_LABEL_REVIEWED_PR}" | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-srz-zumix
 

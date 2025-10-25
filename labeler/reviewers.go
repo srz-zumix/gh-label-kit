@@ -43,7 +43,7 @@ func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResul
 			return nil
 		}
 		if actions.IsRunsOn() {
-			eventContext, err := actions.GetEventContext()
+			eventContext, err := actions.GetEventPayload()
 			if err != nil {
 				return nil
 			}
