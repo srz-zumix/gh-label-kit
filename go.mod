@@ -3,7 +3,7 @@ module github.com/srz-zumix/gh-label-kit
 go 1.24.2
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.8.1
+	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/cli/go-gh/v2 v2.12.2
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/google/go-github/v73 v73.0.0
