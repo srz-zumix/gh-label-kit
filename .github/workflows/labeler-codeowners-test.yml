@@ -242,6 +242,16 @@ jobs:
       #
       # ready_for_review request
       #
+      - name: Label-kit codeowners-enable (ready_for_review, not draft PR)
+        shell: bash
+        run: |
+          go run . labeler \
+            --config .github/labeler-codeowners-test-enable.yml \
+            --sync \
+            --review-request ready_for_review \
+            --dryrun \
+            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+      - *test-reviewers-srz-zumix
       - name: Label-kit codeowners-enable (ready_for_review, draft PR)
         shell: bash
         run: |
