@@ -47,10 +47,9 @@ func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResul
 			if err != nil {
 				return nil
 			}
-			if eventContext.Action != "ready_for_review" {
-				return nil
+			if eventContext.Action == "ready_for_review" {
+				return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAlways, syncLabels)
 			}
-			return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAlways, syncLabels)
 		}
 		return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAddTo, syncLabels)
 	case ReviewRequestModeAlwaysReviewable:
