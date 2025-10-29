@@ -1,57 +1,57 @@
 package logger
 
 import (
-"log/slog"
-"os"
-"strings"
+	"log/slog"
+	"os"
+	"strings"
 )
 
 var defaultLogger *slog.Logger
 
 func init() {
-// Default to INFO level
-SetLogLevel("info")
+	// Default to INFO level
+	SetLogLevel("info")
 }
 
 // SetLogLevel configures the global logger with the specified level
 func SetLogLevel(level string) {
-var logLevel slog.Level
-switch strings.ToLower(level) {
-case "debug":
-logLevel = slog.LevelDebug
-case "info":
-logLevel = slog.LevelInfo
-case "warn", "warning":
-logLevel = slog.LevelWarn
-case "error":
-logLevel = slog.LevelError
-default:
-logLevel = slog.LevelInfo
-}
+	var logLevel slog.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		logLevel = slog.LevelDebug
+	case "info":
+		logLevel = slog.LevelInfo
+	case "warn", "warning":
+		logLevel = slog.LevelWarn
+	case "error":
+		logLevel = slog.LevelError
+	default:
+		logLevel = slog.LevelInfo
+	}
 
-handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-Level: logLevel,
-})
-defaultLogger = slog.New(handler)
-slog.SetDefault(defaultLogger)
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	})
+	defaultLogger = slog.New(handler)
+	slog.SetDefault(defaultLogger)
 }
 
 // Debug logs a debug message
 func Debug(msg string, args ...any) {
-defaultLogger.Debug(msg, args...)
+	defaultLogger.Debug(msg, args...)
 }
 
 // Info logs an info message
 func Info(msg string, args ...any) {
-defaultLogger.Info(msg, args...)
+	defaultLogger.Info(msg, args...)
 }
 
 // Warn logs a warning message
 func Warn(msg string, args ...any) {
-defaultLogger.Warn(msg, args...)
+	defaultLogger.Warn(msg, args...)
 }
 
 // Error logs an error message
 func Error(msg string, args ...any) {
-defaultLogger.Error(msg, args...)
+	defaultLogger.Error(msg, args...)
 }
