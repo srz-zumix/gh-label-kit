@@ -4,6 +4,20 @@ import (
 	"testing"
 )
 
+// TestBasicExtglobPatterns tests extglob pattern matching.
+//
+// Implementation Note:
+// Our extglob implementation follows standard glob semantics where:
+// - '*' matches any characters except path separators ('/')
+// - '**' is required to match across directory boundaries
+//
+// This differs from shell extglob behavior where:
+// - '!(pattern)' can match strings containing path separators
+// - '!(test)/*' would match 'src/common/main.go' because !(test) matches 'src/common'
+//
+// We chose standard glob semantics for consistency with common glob libraries
+// like doublestar and more predictable path-based matching behavior.
+
 func TestBasicExtglobPatterns(t *testing.T) {
 	cases := []struct {
 		pattern  string
@@ -123,7 +137,7 @@ func TestBasicExtglobPatterns(t *testing.T) {
 			pattern:  "!(test)/*",
 			filename: "src/common/main.go",
 			want:     false,
-			desc:     "Should not match files in nested directories (standard glob: * excludes /)",
+			desc:     "Should not match files in nested directories (standard glob: * excludes /). Note: shell extglob would match this as !(test) can match 'src/common'",
 		},
 		// Basic extglob with ** patterns
 		{
