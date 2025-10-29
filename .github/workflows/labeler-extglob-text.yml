@@ -1,0 +1,47 @@
+name: "Labeler extglob Test"
+on:
+ pull_request:
+
+jobs:
+  labeler-extglob-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      CONFIGURATION_PATH: .github/labeler-extglob-test.yml
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit labeler
+        id: label-kit-labeler
+        run: |
+          MATCHED_LABELS=$(go run . labeler \
+            --config ${{ env.CONFIGURATION_PATH }} \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            ${{ github.event.number }})
+          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+      - name: Test
+        env:
+          LABEL_KIT_ALL_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
+        run: |
+          LABEL_KIT_LABELS_SORTED=$(echo "${LABEL_KIT_ALL_LABELS}" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
+          echo "LABEL_KIT_LABELS_SORTED=${LABEL_KIT_LABELS_SORTED}"
+          test "${LABEL_KIT_LABELS_SORTED}" =~ "extglob-test"

@@ -21,7 +21,7 @@ gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--s
 ```
 
 Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, and a YAML config file (default: .github/labeler.yml).
-Supports glob/regex patterns and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler].
+Supports glob/regex patterns, extended glob patterns (extglob), and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler] with additional extglob support.
 
 - --color: Use color in diff output (auto|never|always, default: auto)
 - --config: Path to labeler config YAML file (default: .github/labeler.yml)

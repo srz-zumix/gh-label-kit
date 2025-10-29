@@ -21,6 +21,18 @@ The labeler supports various file matching strategies:
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
 
+### Extended Glob Patterns (extglob)
+
+In addition to standard glob patterns, the labeler supports extended glob patterns for more advanced matching:
+
+- **!(pattern)**: Match anything except the pattern (negation)
+- **?(pattern)**: Match zero or one occurrence of the pattern
+- **+(pattern)**: Match one or more occurrences of the pattern  
+- ***(pattern)**: Match zero or more occurrences of the pattern
+- **@(pattern)**: Match exactly one occurrence of the pattern
+
+Extended glob patterns can be combined with standard doublestar (`**`) patterns and support multiple alternatives using the pipe (`|`) separator.
+
 ```yaml
 backend:
   - changed-files:
@@ -28,6 +40,30 @@ backend:
       - "api/**/*"
       - "server/**/*"
       - "**/*.go"
+```
+
+#### Extended Glob Examples
+
+```yaml
+# Match files that are NOT markdown
+no-markdown:
+  - changed-files:
+    - any-glob-to-any-file: "!(*.md)"
+
+# Match only Go source files or Go modules
+go-files-only:
+  - changed-files:
+    - any-glob-to-any-file: "@(*.go|go.mod|go.sum)"
+
+# Match files that are NOT test files
+no-tests:
+  - changed-files:
+    - any-glob-to-any-file: "!(**/*_test.go)"
+
+# Match either source code or documentation
+source-or-docs:
+  - changed-files:
+    - any-glob-to-any-file: "@(src/**|docs/**)"
 ```
 
 ### Branch Matching
