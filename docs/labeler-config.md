@@ -21,7 +21,7 @@ The labeler supports various file matching strategies:
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
 
-### Extended Glob Patterns (extglob)
+### Extended Glob Patterns (extglob) (**Experimental**)
 
 In addition to standard glob patterns, the labeler supports extended glob patterns for more advanced matching:
 
