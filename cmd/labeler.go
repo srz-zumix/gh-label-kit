@@ -9,6 +9,7 @@ import (
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/spf13/cobra"
 	"github.com/srz-zumix/gh-label-kit/labeler"
+	"github.com/srz-zumix/gh-label-kit/pkg/logger"
 	"github.com/srz-zumix/go-gh-extension/pkg/actions"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
@@ -76,13 +77,13 @@ func NewLabelerCmd() *cobra.Command {
 
 				if dryrun {
 					if result.HasDiff(syncLabels) {
-						fmt.Printf("Would set labels for PR #%s: %v to %v\n", prNumber, result.Current, allLabels)
+						logger.Info("Would set labels for PR", "pr", prNumber, "current", result.Current, "new", allLabels)
 					} else {
-						fmt.Printf("No label changes for PR #%s: %v\n", prNumber, allLabels)
+						logger.Info("No label changes for PR", "pr", prNumber, "labels", allLabels)
 					}
 					codeowners := labeledCodeOwners.GetReviewers(reviewRequestLabels)
 					if len(codeowners) > 0 {
-						fmt.Printf("Would request reviewers for PR #%s: %v\n", prNumber, codeowners)
+						logger.Info("Would request reviewers for PR", "pr", prNumber, "reviewers", codeowners)
 					}
 				} else {
 					renderer := render.NewRenderer(opts.Exporter)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/srz-zumix/gh-label-kit/pkg/logger"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
 )
@@ -41,7 +42,7 @@ func NewCopyCmd() *cobra.Command {
 				if err := gh.CopyLabels(ctx, client, src, dst, force); err != nil {
 					return fmt.Errorf("failed to copy labels to %s: %w", parser.GetRepositoryFullName(dst), err)
 				}
-				fmt.Printf("Successfully copied labels from %s to %s\n", parser.GetRepositoryFullName(src), parser.GetRepositoryFullName(dst))
+				logger.Info("Successfully copied labels", "from", parser.GetRepositoryFullName(src), "to", parser.GetRepositoryFullName(dst))
 			}
 			return nil
 		},
