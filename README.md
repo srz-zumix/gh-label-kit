@@ -10,6 +10,16 @@ To install the tool, you can use the following command:
 gh extension install srz-zumix/gh-label-kit
 ```
 
+## Global Flags
+
+### --log-level
+
+Set the logging level for output. Available levels: debug, info, warn, error (default: info)
+
+```sh
+gh label-kit --log-level debug <command>
+```
+
 ## Commands & Usage
 
 ---
