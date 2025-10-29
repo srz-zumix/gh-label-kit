@@ -1,191 +1,130 @@
 # gh-label-kit
 
-gh-label-kit is a set of gh extension commands for GitHub label management and auto-labeling.
+`gh-label-kit`は、GitHubラベルの管理と自動ラベリングのための`gh`拡張コマンドセットです。
 
-## Installation
+## インストール
 
-To install the tool, you can use the following command:
+以下のコマンドでインストールできます:
 
 ```sh
 gh extension install srz-zumix/gh-label-kit
 ```
 
-## Commands & Usage
+## コマンドと使用法
+
+各コマンドの詳細なオプションについては、`--help`フラグを参照してください。
 
 ---
 
-### labeler: Auto-label PRs
+### labeler: PRへの自動ラベル付け
 
 ```sh
-gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>] [--name-only] [--ref <string>]
+gh label-kit labeler <pr-number...>
 ```
 
-Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, and a YAML config file (default: .github/labeler.yml).
-Supports glob/regex patterns and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler].
+変更されたファイルやブランチ名に基づき、設定ファイル（`.github/labeler.yml`）に従ってプルリクエストに自動でラベルを付け外しします。
+このコマンドは[actions/labeler][labeler]と同様に動作します。
 
-- --color: Use color in diff output (auto|never|always, default: auto)
-- --config: Path to labeler config YAML file (default: .github/labeler.yml)
-- --dryrun/-n: Dry run: do not actually set labels
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --name-only: Output only team names
-- --ref: Git reference (branch, tag, or commit SHA) to load config from repository
-- --repo/-R: Target repository in the format 'owner/repo'
-- --sync: Remove labels not matching any condition
-- --template/-t: Format JSON output using a Go template
-
-The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color` and `codeowners` features.
-
-For detailed configuration documentation, see [docs/labeler-config.md](docs/labeler-config.md).
+設定ファイルについての詳細は[docs/labeler-config.md](docs/labeler-config.md)を参照してください。
 
 ---
 
-### repo copy: Copy labels between repositories
+### repo copy: リポジトリ間でラベルをコピー
 
 ```sh
-gh label-kit repo copy <dst-repository...> [--repo <owner/repo>] [--force]
+gh label-kit repo copy <dst-repository...>
 ```
 
-Copy all labels from the source repository to the destination repositories. If a label already exists in the destination, it will be skipped unless --force is specified.
-
-- --force/-f: Overwrite existing labels in the destination repository
-- --repo/-R: Repository in the format 'owner/repo' (source repository)
+指定したリポジトリから、対象リポジトリへ全てのラベルをコピーします。
 
 ---
 
-### repo list: List labels
+### repo list: ラベルの一覧表示
 
 ```sh
-gh label-kit repo list [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit repo list
 ```
 
-List all labels in the specified repository.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+リポジトリの全ラベルを一覧表示します。
 
 ---
 
-### repo sync: Sync label differences
+### repo sync: ラベルの同期
 
 ```sh
-gh label-kit repo sync <dst-repository...> [--repo <owner/repo>] [--force]
+gh label-kit repo sync <dst-repository...>
 ```
 
-Sync all labels from the source repository to the destination repositories. If a label already exists in the destination, it will be updated if --force is specified.
-
-- --force/-f: Overwrite existing labels in the destination repository
-- --repo/-R: The repository in the format 'owner/repo' (source repository)
+指定したリポジトリから、対象リポジトリへ全てのラベルを同期します。
 
 ---
 
-### runner list: List GitHub Actions runner labels
+### runner list: GitHub Actionsランナーのラベルを一覧表示
 
 ```sh
-gh label-kit runner list [--repo <owner/repo>] [--owner <organization>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit runner list
 ```
 
-List all GitHub Actions runner labels in the specified repository.
-
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --owner: Specify the organization name
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+リポジトリまたはOrganizationに登録されているGitHub Actionsランナーのラベルを一覧表示します。
 
 ---
 
-### issue add: Add label(s) to issue
+### issue add: Issue/PRにラベルを追加
 
 ```sh
-gh label-kit issue add <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit issue add <number> <label>...
 ```
 
-Add one or more labels to a issue in the repository.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+IssueまたはPRに1つ以上のラベルを追加します。
 
 ---
 
-### issue clear: Remove all labels from issue
+### issue clear: Issue/PRから全てのラベルを削除
 
 ```sh
-gh label-kit issue clear <number> [--repo <owner/repo>]
+gh label-kit issue clear <number>
 ```
 
-Remove all labels from a issue in the repository.
-
-- --repo/-R: Repository in the format 'owner/repo'
+IssueまたはPRから全てのラベルを削除します。
 
 ---
 
-### issue list: List labels for issue
+### issue list: Issue/PRのラベルを一覧表示
 
 ```sh
-gh label-kit issue list <number> [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit issue list <number>
 ```
 
-List all labels attached to a issue in the repository.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+IssueまたはPRに付けられたラベルを一覧表示します。
 
 ---
 
-### issue remove: Remove label(s) from issue
+### issue remove: Issue/PRからラベルを削除
 
 ```sh
-gh label-kit issue remove <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit issue remove <number> <label>...
 ```
 
-Remove one or more labels from a issue in the repository.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+IssueまたはPRから1つ以上のラベルを削除します。
 
 ---
 
-### issue set: Set labels for issue (replace all)
+### issue set: Issue/PRのラベルを置換
 
 ```sh
-gh label-kit issue set <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit issue set <number> <label>...
 ```
 
-Set (replace) all labels for a issue in the repository.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+IssueまたはPRの全てのラベルを指定したラベルに置き換えます。
 
 ---
 
-### milestone list: List labels for milestone
+### milestone list: マイルストーンのラベルを一覧表示
 
 ```sh
-gh label-kit milestone list <milestone> [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+gh label-kit milestone list <milestone>
 ```
 
-List all labels attached to issues and PRs in the specified milestone.
-
-- --color: Use color in diff output (always|never|auto, default: auto)
-- --format: Output format (json)
-- --jq: Filter JSON output using a jq expression
-- --repo/-R: Repository in the format 'owner/repo'
-- --template/-t: Format JSON output using a Go template
+指定したマイルストーンに含まれるIssueとPRに付けられたラベルを一覧表示します。
 
 [labeler]: https://github.com/actions/labeler
