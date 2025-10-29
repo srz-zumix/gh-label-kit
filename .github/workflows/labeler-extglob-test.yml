@@ -44,4 +44,4 @@ jobs:
         run: |
           LABEL_KIT_LABELS_SORTED=$(echo "${LABEL_KIT_ALL_LABELS}" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
           echo "LABEL_KIT_LABELS_SORTED=${LABEL_KIT_LABELS_SORTED}"
-          test "${LABEL_KIT_LABELS_SORTED}" =~ "extglob-test"
+          [[ "${LABEL_KIT_LABELS_SORTED}" =~ "extglob-test" ]]
