@@ -99,7 +99,7 @@ jobs:
             --sync \
             --dryrun \
             --format json --jq '[ .[].name ] | join(",")' \
-            "${CLOSED_NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${CLOSED_NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - &test-reviewers-no-request
         name: Test no request
         run: |
@@ -142,7 +142,7 @@ jobs:
             --sync \
             --review-request ready_for_review \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - name: Test reviewers
         run: |
           grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
@@ -184,7 +184,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - &test-reviewers-srz-zumix
         name: Test reviewers
         run: |
@@ -198,7 +198,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       - name: Label-kit codeowners-enable (addto, already requested)
@@ -208,7 +208,7 @@ jobs:
             --config .github/labeler-codeowners-test-enable.yml \
             --sync \
             --dryrun \
-            "${NO_LABEL_REQUESTED_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_REQUESTED_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       #
@@ -222,7 +222,7 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
       #
@@ -236,7 +236,7 @@ jobs:
             --sync \
             --review-request none \
             --dryrun \
-            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       #
@@ -250,7 +250,7 @@ jobs:
             --sync \
             --review-request ready_for_review \
             --dryrun \
-            "${NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
       - name: Label-kit codeowners-enable (ready_for_review, draft PR)
         shell: bash
@@ -260,7 +260,7 @@ jobs:
             --sync \
             --review-request ready_for_review \
             --dryrun \
-            "${DRAFT_NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${DRAFT_NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
       - name: Label-kit codeowners-enable (ready_for_review, already labeled)
         shell: bash
@@ -270,7 +270,7 @@ jobs:
             --sync \
             --review-request ready_for_review \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       #
@@ -284,7 +284,7 @@ jobs:
             --sync \
             --review-request always_reviewable \
             --dryrun \
-            "${DRAFT_NO_LABEL_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${DRAFT_NO_LABEL_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
       - name: Label-kit codeowners-enable (always_reviewable, already labeled)
         shell: bash
@@ -294,7 +294,7 @@ jobs:
             --sync \
             --review-request always_reviewable \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
   codeowners-expand-fallback-test:
@@ -331,7 +331,7 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            "${LABELED_NO_REQUEST_PR}" | tee ${{ runner.temp }}/output.txt
+            "${LABELED_NO_REQUEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - name: Test reviewers (expand fallback)
         run: |
           grep -q "Would request reviewers for PR" "${RUNNER_TEMP}/output.txt"
@@ -370,7 +370,7 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            "${NO_LABEL_REVIEWED_LAST_COMMIT_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_REVIEWED_LAST_COMMIT_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-no-request
 
       - name: Label-kit codeowners-enable (always, already reviewed)
@@ -381,6 +381,6 @@ jobs:
             --sync \
             --review-request always \
             --dryrun \
-            "${NO_LABEL_REVIEWED_PR}" | tee ${{ runner.temp }}/output.txt
+            "${NO_LABEL_REVIEWED_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
       - *test-reviewers-srz-zumix
 
