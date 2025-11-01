@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
 )
 
@@ -39,7 +40,7 @@ func NewSyncCmd() *cobra.Command {
 				if err := gh.SyncLabels(ctx, client, src, dst, force); err != nil {
 					return fmt.Errorf("failed to sync labels to %s: %w", parser.GetRepositoryFullName(dst), err)
 				}
-				fmt.Printf("Successfully synced labels from %s to %s\n", parser.GetRepositoryFullName(src), parser.GetRepositoryFullName(dst))
+				logger.Info("Successfully synced labels", "from", parser.GetRepositoryFullName(src), "to", parser.GetRepositoryFullName(dst))
 			}
 			return nil
 		},

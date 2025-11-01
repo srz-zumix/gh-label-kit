@@ -47,7 +47,7 @@ jobs:
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             ${{ github.event.number }})
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+          echo "labels=${MATCHED_LABELS}" 2>&1 | tee "${GITHUB_OUTPUT}"
       - name: Test
         env:
           LABELER_ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
@@ -92,7 +92,7 @@ jobs:
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             1)
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+          echo "labels=${MATCHED_LABELS}" 2>&1 | tee "${GITHUB_OUTPUT}"
       - name: Label-kit sync-disable
         id: sync-disable
         run: |
@@ -101,7 +101,7 @@ jobs:
             --sync \
             --format json --jq '[ .[].name ] | join(",")' \
             1)
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
+          echo "labels=${MATCHED_LABELS}" 2>&1 | tee "${GITHUB_OUTPUT}"
       - name: Test
         env:
           SYNC_ENABLE_LABELS: ${{ steps.sync-enable.outputs.labels }}

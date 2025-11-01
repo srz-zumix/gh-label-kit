@@ -9,6 +9,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/srz-zumix/gh-label-kit/version"
 	"github.com/srz-zumix/go-gh-extension/pkg/actions"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
+)
+
+var (
+	logLevel string
 )
 
 var rootCmd = &cobra.Command{
@@ -16,6 +21,9 @@ var rootCmd = &cobra.Command{
 	Short:   "A tool to manage GitHub labels",
 	Long:    `gh-label-kit is a tool to manage GitHub labels.`,
 	Version: version.Version,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.SetLogLevel(logLevel)
+	},
 }
 
 func Execute() {
@@ -29,4 +37,5 @@ func init() {
 	if actions.IsRunsOn() {
 		rootCmd.SetErrPrefix(actions.GetErrorPrefix())
 	}
+	logger.AddCmdFlag(rootCmd, rootCmd.PersistentFlags(), &logLevel, "log-level", "L")
 }
