@@ -27,7 +27,7 @@ In addition to standard glob patterns, the labeler supports extended glob patter
 
 - **!(pattern)**: Match anything except the pattern (negation)
 - **?(pattern)**: Match zero or one occurrence of the pattern
-- **+(pattern)**: Match one or more occurrences of the pattern  
+- **+(pattern)**: Match one or more occurrences of the pattern
 - ***(pattern)**: Match zero or more occurrences of the pattern
 - **@(pattern)**: Match exactly one occurrence of the pattern
 
