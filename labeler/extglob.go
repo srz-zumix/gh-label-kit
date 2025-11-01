@@ -9,26 +9,60 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
-// ExtglobType represents the type of extended glob pattern
+// =============================================================================
+// TYPE DEFINITIONS
+// =============================================================================
+
+// ExtglobType represents the type of extended glob pattern supported by bash.
+// Each type defines different matching semantics for the enclosed pattern.
 type ExtglobType int
 
 const (
-	ExtglobNone       ExtglobType = iota
-	ExtglobNot                    // !(pattern) - match anything except pattern
-	ExtglobZeroOrOne              // ?(pattern) - match zero or one occurrence of pattern
-	ExtglobOneOrMore              // +(pattern) - match one or more occurrences of pattern
-	ExtglobZeroOrMore             // *(pattern) - match zero or more occurrences of pattern
-	ExtglobExact                  // @(pattern) - match exactly one occurrence of pattern
+	// ExtglobNone indicates no extended glob pattern
+	ExtglobNone ExtglobType = iota
+	// ExtglobNot represents !(pattern) - matches anything except the specified pattern(s)
+	ExtglobNot
+	// ExtglobZeroOrOne represents ?(pattern) - matches zero or one occurrence of pattern(s)
+	ExtglobZeroOrOne
+	// ExtglobOneOrMore represents +(pattern) - matches one or more occurrences of pattern(s)
+	ExtglobOneOrMore
+	// ExtglobZeroOrMore represents *(pattern) - matches zero or more occurrences of pattern(s)
+	ExtglobZeroOrMore
+	// ExtglobExact represents @(pattern) - matches exactly one of the specified pattern(s)
+	ExtglobExact
 )
 
-// ExtglobPattern represents a parsed extended glob pattern
-type ExtglobPattern struct {
-	Type     ExtglobType
-	Pattern  string
-	Original string
+// String returns a string representation of the ExtglobType for debugging
+func (t ExtglobType) String() string {
+	switch t {
+	case ExtglobNot:
+		return "not"
+	case ExtglobZeroOrOne:
+		return "zero-or-one"
+	case ExtglobOneOrMore:
+		return "one-or-more"
+	case ExtglobZeroOrMore:
+		return "zero-or-more"
+	case ExtglobExact:
+		return "exact"
+	default:
+		return "none"
+	}
 }
 
-// parseExtglob parses an extended glob pattern with support for nested patterns
+// ExtglobPattern represents a parsed extended glob pattern with its components
+type ExtglobPattern struct {
+	Type     ExtglobType // The type of extglob pattern
+	Pattern  string      // The inner pattern content (without the operator and parentheses)
+	Original string      // The original full pattern string
+}
+
+// =============================================================================
+// PATTERN PARSING UTILITIES
+// =============================================================================
+
+// parseExtglob parses an extended glob pattern with support for nested patterns.
+// Returns nil if the pattern is not a valid extglob pattern.
 func parseExtglob(pattern string) *ExtglobPattern {
 	// Try to find the first extglob pattern
 	pos := findExtglobStart(pattern)
@@ -72,7 +106,8 @@ func parseExtglob(pattern string) *ExtglobPattern {
 	}
 }
 
-// findExtglobStart finds the position of the first extglob operator in the pattern
+// findExtglobStart finds the position of the first extglob operator in the pattern.
+// Returns -1 if no extglob operator is found.
 func findExtglobStart(pattern string) int {
 	for i := 0; i < len(pattern); i++ {
 		if i+1 < len(pattern) && pattern[i+1] == '(' {
@@ -85,7 +120,8 @@ func findExtglobStart(pattern string) int {
 	return -1
 }
 
-// findMatchingParen finds the matching closing parenthesis for the opening parenthesis at openPos
+// findMatchingParen finds the matching closing parenthesis for the opening parenthesis at openPos.
+// Properly handles nested parentheses. Returns -1 if no matching parenthesis is found.
 func findMatchingParen(pattern string, openPos int) int {
 	if openPos >= len(pattern) || pattern[openPos] != '(' {
 		return -1
@@ -106,7 +142,105 @@ func findMatchingParen(pattern string, openPos int) int {
 	return -1
 }
 
-// matchComplexGlob handles patterns that contain extglob patterns mixed with regular glob patterns
+// splitExtglobAlternatives splits a pattern by | while respecting nested parentheses.
+// This is used to handle patterns like "js|ts|jsx" within extglob expressions.
+func splitExtglobAlternatives(pattern string) []string {
+	if !strings.Contains(pattern, "|") {
+		return []string{pattern}
+	}
+
+	var alternatives []string
+	var current strings.Builder
+	depth := 0
+
+	for _, r := range pattern {
+		switch r {
+		case '(':
+			depth++
+			current.WriteRune(r)
+		case ')':
+			depth--
+			current.WriteRune(r)
+		case '|':
+			if depth == 0 {
+				// We're at the top level, this is a separator
+				alternatives = append(alternatives, current.String())
+				current.Reset()
+			} else {
+				// We're inside nested parentheses, include the |
+				current.WriteRune(r)
+			}
+		default:
+			current.WriteRune(r)
+		}
+	}
+
+	// Add the last alternative
+	if current.Len() > 0 {
+		alternatives = append(alternatives, current.String())
+	}
+
+	return alternatives
+}
+
+// isExtglob checks if a pattern contains extended glob syntax anywhere in the string
+func isExtglob(pattern string) bool {
+	// Check for any extglob pattern anywhere in the string
+	extglobPattern := regexp.MustCompile(`[!?+*@]\([^)]*\)`)
+	return extglobPattern.MatchString(pattern)
+}
+
+// containsExtglob checks if a pattern contains extglob without using regex for performance
+func containsExtglob(pattern string) bool {
+	for i := 0; i < len(pattern)-1; i++ {
+		if strings.ContainsRune("!?+*@", rune(pattern[i])) && pattern[i+1] == '(' {
+			return true
+		}
+	}
+	return false
+}
+
+// isEntirelyExtglob checks if the entire pattern is a single extglob pattern
+// (possibly with some trailing simple glob patterns like /* or /**)
+func isEntirelyExtglob(pattern string) bool {
+	// Check if pattern starts with extglob and covers the entire pattern
+	if len(pattern) < 3 {
+		return false
+	}
+
+	// Check if it starts with extglob operator
+	if !strings.ContainsRune("!?+*@", rune(pattern[0])) || pattern[1] != '(' {
+		return false
+	}
+
+	// Find the matching closing parenthesis
+	parenEnd := findMatchingParen(pattern, 1)
+	if parenEnd == -1 {
+		return false
+	}
+
+	// Check if the pattern ends at the closing parenthesis (possibly with some trailing simple patterns)
+	remaining := pattern[parenEnd+1:]
+
+	// If remaining contains another extglob, this is not entirely a single extglob
+	if containsExtglob(remaining) {
+		return false
+	}
+
+	// Allow simple trailing patterns like /* or /**
+	if remaining == "" || remaining == "/*" || remaining == "/**" || strings.HasPrefix(remaining, "/*") || strings.HasPrefix(remaining, "/**") {
+		return true
+	}
+
+	return false
+}
+
+// =============================================================================
+// MAIN MATCHING FUNCTIONS
+// =============================================================================
+
+// matchComplexGlob handles patterns that contain extglob patterns mixed with regular glob patterns.
+// This is the main entry point for complex pattern matching.
 func matchComplexGlob(pattern, filename string) bool {
 	// If the entire pattern is an extglob, use the existing function
 	if isEntirelyExtglob(pattern) {
@@ -241,46 +375,6 @@ func matchPattern(pattern, filename string) bool {
 	return matchGlobDoublestar(pattern, filename)
 }
 
-// splitExtglobAlternatives splits a pattern by | while respecting nested parentheses
-func splitExtglobAlternatives(pattern string) []string {
-	if !strings.Contains(pattern, "|") {
-		return []string{pattern}
-	}
-
-	var alternatives []string
-	var current strings.Builder
-	depth := 0
-
-	for _, r := range pattern {
-		switch r {
-		case '(':
-			depth++
-			current.WriteRune(r)
-		case ')':
-			depth--
-			current.WriteRune(r)
-		case '|':
-			if depth == 0 {
-				// We're at the top level, this is a separator
-				alternatives = append(alternatives, current.String())
-				current.Reset()
-			} else {
-				// We're inside nested parentheses, include the |
-				current.WriteRune(r)
-			}
-		default:
-			current.WriteRune(r)
-		}
-	}
-
-	// Add the last alternative
-	if current.Len() > 0 {
-		alternatives = append(alternatives, current.String())
-	}
-
-	return alternatives
-}
-
 // convertExtglobToRegex2 converts an extglob pattern to a regexp2-compatible regular expression
 func convertExtglobToRegex2(pattern string) (string, bool) {
 	if !isExtglob(pattern) {
@@ -410,7 +504,12 @@ func matchExtglobNotWithRemainder(pattern, filename string) bool {
 	return true // Matches structure but doesn't match negated patterns
 }
 
-// matchExtglobZeroOrOne implements ?(pattern) - match zero or one occurrence
+// =============================================================================
+// EXTGLOB TYPE-SPECIFIC MATCHING FUNCTIONS
+// =============================================================================
+
+// matchExtglobZeroOrOne implements ?(pattern) - match zero or one occurrence of the pattern.
+// Returns true if filename matches any of the alternatives or represents zero occurrence.
 func matchExtglobZeroOrOne(pattern, filename string) bool {
 	// Handle multiple patterns separated by |
 	patterns := splitExtglobAlternatives(pattern)
@@ -428,7 +527,8 @@ func matchExtglobZeroOrOne(pattern, filename string) bool {
 	return filename == "" || matchPattern("", filename)
 }
 
-// matchExtglobOneOrMore implements +(pattern) - match one or more occurrences
+// matchExtglobOneOrMore implements +(pattern) - match one or more occurrences of the pattern.
+// At least one pattern alternative must match for this to return true.
 func matchExtglobOneOrMore(pattern, filename string) bool {
 	// Handle multiple patterns separated by |
 	patterns := splitExtglobAlternatives(pattern)
@@ -444,7 +544,8 @@ func matchExtglobOneOrMore(pattern, filename string) bool {
 	return false
 }
 
-// matchExtglobZeroOrMore implements *(pattern) - match zero or more occurrences
+// matchExtglobZeroOrMore implements *(pattern) - match zero or more occurrences of the pattern.
+// Always matches since zero occurrences is valid, unless a specific pattern matches.
 func matchExtglobZeroOrMore(pattern, filename string) bool {
 	// Handle multiple patterns separated by |
 	patterns := splitExtglobAlternatives(pattern)
@@ -461,7 +562,8 @@ func matchExtglobZeroOrMore(pattern, filename string) bool {
 	return true // Zero or more means it can always match
 }
 
-// matchExtglobExact implements @(pattern) - match exactly one occurrence
+// matchExtglobExact implements @(pattern) - match exactly one occurrence of the pattern.
+// Returns true if filename matches exactly one of the pattern alternatives.
 func matchExtglobExact(pattern, filename string) bool {
 	// Handle multiple patterns separated by |
 	patterns := splitExtglobAlternatives(pattern)
@@ -475,65 +577,6 @@ func matchExtglobExact(pattern, filename string) bool {
 	}
 
 	return false
-}
-
-// isExtglob checks if a pattern contains extended glob syntax
-func isExtglob(pattern string) bool {
-	// Check for any extglob pattern anywhere in the string
-	extglobPattern := regexp.MustCompile(`[!?+*@]\([^)]*\)`)
-	return extglobPattern.MatchString(pattern)
-}
-
-// isEntirelyExtglob checks if the entire pattern is a single extglob pattern
-func isEntirelyExtglob(pattern string) bool {
-	// Check if pattern starts with extglob and covers the entire pattern
-	if len(pattern) < 3 {
-		return false
-	}
-
-	// Check if it starts with extglob operator
-	if !strings.ContainsRune("!?+*@", rune(pattern[0])) || pattern[1] != '(' {
-		return false
-	}
-
-	// Find the matching closing parenthesis
-	parenEnd := findMatchingParen(pattern, 1)
-	if parenEnd == -1 {
-		return false
-	}
-
-	// Check if the pattern ends at the closing parenthesis (possibly with some trailing simple patterns)
-	remaining := pattern[parenEnd+1:]
-
-	// If remaining contains another extglob, this is not entirely a single extglob
-	if containsExtglob(remaining) {
-		return false
-	}
-
-	// Allow simple trailing patterns like /* or /**
-	if remaining == "" || remaining == "/*" || remaining == "/**" || strings.HasPrefix(remaining, "/*") || strings.HasPrefix(remaining, "/**") {
-		return true
-	}
-
-	return false
-}
-
-// String returns a string representation of the extglob type
-func (t ExtglobType) String() string {
-	switch t {
-	case ExtglobNot:
-		return "not"
-	case ExtglobZeroOrOne:
-		return "zero-or-one"
-	case ExtglobOneOrMore:
-		return "one-or-more"
-	case ExtglobZeroOrMore:
-		return "zero-or-more"
-	case ExtglobExact:
-		return "exact"
-	default:
-		return "none"
-	}
 }
 
 // processExtglobManually manually processes extglob patterns to avoid regex complexity
@@ -641,16 +684,6 @@ func processExtglobManually(pattern string) string {
 	}
 
 	return result
-}
-
-// containsExtglob checks if a pattern contains extglob without regex
-func containsExtglob(pattern string) bool {
-	for i := 0; i < len(pattern)-1; i++ {
-		if strings.ContainsRune("!?+*@", rune(pattern[i])) && pattern[i+1] == '(' {
-			return true
-		}
-	}
-	return false
 }
 
 // convertComplexPatternToRegex2 converts complex patterns with extglob to regexp2
@@ -776,7 +809,12 @@ func processComplexPattern(pattern string) string {
 	return result
 }
 
-// extractNegatedPatterns extracts the negated patterns from the original pattern
+// =============================================================================
+// PATTERN EXPANSION AND HELPER FUNCTIONS
+// =============================================================================
+
+// extractNegatedPatterns extracts the negated patterns from the original pattern.
+// Used for complex negation handling in patterns like **/!(test)/**/*.go
 func extractNegatedPatterns(pattern string) ([]string, bool) {
 	// Extract patterns like !(test) and convert them to positive patterns for exclusion
 	var negatedPatterns []string
@@ -816,7 +854,8 @@ func extractNegatedPatterns(pattern string) ([]string, bool) {
 	return negatedPatterns, len(negatedPatterns) > 0
 }
 
-// replaceNegationWithWildcard replaces negation patterns with wildcards for general structure matching
+// replaceNegationWithWildcard replaces negation patterns with wildcards for general structure matching.
+// Converts patterns like **/!(test)/**/*.go to **/*/**/*.go for structural validation.
 func replaceNegationWithWildcard(pattern string) string {
 	result := pattern
 
