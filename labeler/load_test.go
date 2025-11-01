@@ -212,3 +212,75 @@ backend:
 		t.Errorf("expected 2 codeowners entries, got %d", len(lc.Codeowners))
 	}
 }
+
+func TestLoadConfig_DescriptionKey(t *testing.T) {
+	yamlContent := `
+ci:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: '.github/*'
+  - color: '#7c0bb2'
+  - description: 'Continuous Integration'
+labeler:
+  - changed-files:
+      - any-glob-to-any-file: 'labeler/*'
+  - description: 'Auto-labeling functionality'
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/*'
+          - README.md
+  - color: '#abcdef'
+  - description: 'Documentation updates'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 3 {
+		t.Errorf("expected 3 labels, got %d", len(cfg))
+	}
+	cases := []struct {
+		label string
+		want  string
+	}{
+		{"ci", "Continuous Integration"},
+		{"labeler", "Auto-labeling functionality"},
+		{"documentation", "Documentation updates"},
+	}
+	for _, c := range cases {
+		lc, ok := cfg[c.label]
+		if !ok {
+			t.Errorf("%s not loaded", c.label)
+			continue
+		}
+		description := lc.Description
+		if description != c.want {
+			t.Errorf("%s description = %q, want %q", c.label, description, c.want)
+		}
+	}
+}
+
+func TestLoadConfig_DescriptionOnly(t *testing.T) {
+	yamlContent := `
+ci:
+  - description: 'CI/CD pipeline'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 1 labels, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	if len(lc.Matcher) != 0 {
+		t.Errorf("expected no matchers for ci, got %d", len(lc.Matcher))
+	}
+	if lc.Description != "CI/CD pipeline" {
+		t.Errorf("ci description = %q, want %q", lc.Description, "CI/CD pipeline")
+	}
+}

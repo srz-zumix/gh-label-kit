@@ -3,6 +3,7 @@ ci:
   - changed-files:
     - any-glob-to-all-files: '.github/**'
 - color: '#7c0bb2'
+- description: 'Continuous Integration'
 
 labeler:
 - changed-files:
@@ -48,6 +49,9 @@ empty2:
 empty3:
 - changed-files:
   color: '#666666'
+
+description-only:
+- description: 'Test description only'
 
 self-test-any-ci:
 - any:
