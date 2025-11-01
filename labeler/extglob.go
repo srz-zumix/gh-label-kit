@@ -6,6 +6,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dlclark/regexp2"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 // ExtglobType represents the type of extended glob pattern
@@ -105,6 +106,86 @@ func findMatchingParen(pattern string, openPos int) int {
 	return -1
 }
 
+// matchComplexGlob handles patterns that contain extglob patterns mixed with regular glob patterns
+func matchComplexGlob(pattern, filename string) bool {
+	// If the entire pattern is an extglob, use the existing function
+	if isEntirelyExtglob(pattern) {
+		return matchExtglob(pattern, filename)
+	}
+
+	// Handle negation patterns by checking exclusions first (simpler and more reliable)
+	if negatedPatterns, hasNegated := extractNegatedPatterns(pattern); hasNegated {
+		logger.Debug("Processing complex glob with negation patterns",
+			"pattern", pattern,
+			"filename", filename,
+			"negatedPatterns", negatedPatterns)
+
+		// First check if it matches any negated pattern (should not match if it does)
+		for _, p := range negatedPatterns {
+			// The negated pattern might also contain extglob, so use recursive matching
+			var matched bool
+			if containsExtglob(p) {
+				matched = matchComplexGlob(p, filename)
+			} else {
+				m, err := doublestar.PathMatch(p, filename)
+				matched = err == nil && m
+			}
+			if matched {
+				return false // Matches a negated pattern, so should not match overall
+			}
+		}
+
+		// If it doesn't match any negated pattern, check if it matches the general structure
+		// Convert pattern like **/!(test)/**/*.go to **/*/**/*.go for structure matching
+		generalPattern := replaceNegationWithWildcard(pattern)
+
+		logger.Debug("Checking general pattern structure", "generalPattern", generalPattern)
+
+		// The general pattern might also contain extglob, so handle recursively
+		var matched bool
+		if containsExtglob(generalPattern) {
+			// To avoid infinite recursion, check if it's the same as the original pattern
+			if generalPattern != pattern {
+				matched = matchComplexGlob(generalPattern, filename)
+			} else {
+				// Fall back to regex approach
+				regexPattern, regexOk := convertComplexPatternToRegex2(generalPattern)
+				if regexOk {
+					re, err := regexp2.Compile(regexPattern, 0)
+					if err == nil {
+						m, err := re.MatchString(filename)
+						matched = err == nil && m
+					}
+				}
+			}
+		} else {
+			m, err := doublestar.PathMatch(generalPattern, filename)
+			matched = err == nil && m
+		}
+
+		if matched {
+			return true // Matches general structure and doesn't match negated patterns
+		}
+		return false
+	}
+
+	// Try regex approach for complex patterns
+	regexPattern, regexOk := convertComplexPatternToRegex2(pattern)
+	if regexOk {
+		re, err := regexp2.Compile(regexPattern, 0)
+		if err == nil {
+			matched, err := re.MatchString(filename)
+			if err == nil {
+				return matched
+			}
+		}
+	}
+
+	// Fallback to regular doublestar matching
+	matched, err := doublestar.PathMatch(pattern, filename)
+	return err == nil && matched
+}
+
 // matchExtglob matches a filename against an extended glob pattern with recursive support
 func matchExtglob(pattern, filename string) bool {
 	// Try to convert the extglob pattern to a regular expression using regexp2
@@ -117,8 +198,8 @@ func matchExtglob(pattern, filename string) bool {
 				return matched
 			}
 		}
-		// Debug: print the generated regex if it fails
-		// fmt.Printf("Debug: pattern=%s, regex=%s, filename=%s\n", pattern, regex, filename)
+		// Log debug information when regex compilation or matching fails
+		logger.Debug("Extglob regex matching failed", "pattern", pattern, "regex", regex, "filename", filename)
 	}
 
 	// Fallback to the original implementation
@@ -304,9 +385,12 @@ func matchExtglobNotWithRemainder(pattern, filename string) bool {
 	genericPattern := "*" + remainder
 	structureMatches := matchGlobDoublestar(genericPattern, filename)
 
-	// Debug output (temporary)
-	// fmt.Printf("Debug: pattern=%s, filename=%s, remainder=%s, genericPattern=%s, structureMatches=%v\n",
-	//          pattern, filename, remainder, genericPattern, structureMatches)
+	logger.Debug("Extglob pattern matching with remainder",
+		"pattern", pattern,
+		"filename", filename,
+		"remainder", remainder,
+		"genericPattern", genericPattern,
+		"structureMatches", structureMatches)
 
 	if !structureMatches {
 		return false // Doesn't match the required structure
@@ -318,7 +402,7 @@ func matchExtglobNotWithRemainder(pattern, filename string) bool {
 		p = strings.TrimSpace(p)
 		negatedPattern := p + remainder
 		if matchGlobDoublestar(negatedPattern, filename) {
-			// fmt.Printf("Debug: matches negated pattern %s\n", negatedPattern)
+			logger.Debug("Filename matches negated pattern", "negatedPattern", negatedPattern)
 			return false // Matches a negated pattern
 		}
 	}
@@ -685,6 +769,76 @@ func processComplexPattern(pattern string) string {
 			default:
 				result += string(char)
 			}
+			i++
+		}
+	}
+
+	return result
+}
+
+// extractNegatedPatterns extracts the negated patterns from the original pattern
+func extractNegatedPatterns(pattern string) ([]string, bool) {
+	// Extract patterns like !(test) and convert them to positive patterns for exclusion
+	var negatedPatterns []string
+
+	// Find all negation patterns
+	i := 0
+	for i < len(pattern) {
+		if i < len(pattern)-1 && pattern[i] == '!' && pattern[i+1] == '(' {
+			// Found negation pattern
+			parenEnd := findMatchingParen(pattern, i+1)
+			if parenEnd == -1 {
+				i++
+				continue
+			}
+
+			// Extract the negated content
+			negatedContent := pattern[i+2 : parenEnd]
+
+			// Get the context before and after the negation
+			before := pattern[:i]
+			after := pattern[parenEnd+1:]
+
+			// Create positive pattern for what should be excluded
+			alternatives := splitExtglobAlternatives(negatedContent)
+			for _, alt := range alternatives {
+				alt = strings.TrimSpace(alt)
+				negatedPattern := before + alt + after
+				negatedPatterns = append(negatedPatterns, negatedPattern)
+			}
+
+			i = parenEnd + 1
+		} else {
+			i++
+		}
+	}
+
+	return negatedPatterns, len(negatedPatterns) > 0
+}
+
+// replaceNegationWithWildcard replaces negation patterns with wildcards for general structure matching
+func replaceNegationWithWildcard(pattern string) string {
+	result := pattern
+
+	// Find all negation patterns and replace them with *
+	i := 0
+	for i < len(result) {
+		if i < len(result)-1 && result[i] == '!' && result[i+1] == '(' {
+			// Found negation pattern
+			parenEnd := findMatchingParen(result, i+1)
+			if parenEnd == -1 {
+				i++
+				continue
+			}
+
+			// Replace the entire !(content) with *
+			before := result[:i]
+			after := result[parenEnd+1:]
+			result = before + "*" + after
+
+			// Continue from the position after the replacement
+			i = len(before) + 1
+		} else {
 			i++
 		}
 	}
