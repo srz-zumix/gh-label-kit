@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/srz-zumix/gh-label-kit/pkg/logger"
 	"github.com/srz-zumix/gh-label-kit/version"
 	"github.com/srz-zumix/go-gh-extension/pkg/actions"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 var (
@@ -37,5 +37,5 @@ func init() {
 	if actions.IsRunsOn() {
 		rootCmd.SetErrPrefix(actions.GetErrorPrefix())
 	}
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "Set log level (debug, info, warn, error)")
+	logger.AddCmdFlag(rootCmd, rootCmd.PersistentFlags(), &logLevel, "log-level", "L")
 }
