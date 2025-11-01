@@ -20,15 +20,24 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 	}
 	for name, cfg := range config {
 		color := cfg.Color
-		if color == "" {
+		description := cfg.Description
+		if color == "" && description == "" {
 			continue
 		}
-		if color[0] == '#' {
+		if color != "" && color[0] == '#' {
 			color = color[1:]
 		}
 		if l, ok := labelMap[name]; ok {
-			if l.Color == nil || *l.Color != color {
+			needsUpdate := false
+			if color != "" && (l.Color == nil || *l.Color != color) {
 				l.Color = github.Ptr(color)
+				needsUpdate = true
+			}
+			if description != "" && (l.Description == nil || *l.Description != description) {
+				l.Description = github.Ptr(description)
+				needsUpdate = true
+			}
+			if needsUpdate {
 				result, err := gh.EditLabel(ctx, g, repo, *l.Name, l)
 				if err != nil {
 					return nil, err

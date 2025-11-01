@@ -9,9 +9,10 @@ import (
 
 type LabelerConfig map[string]LabelerLabelConfig
 type LabelerLabelConfig struct {
-	Matcher    []LabelerMatch
-	Color      string
-	Codeowners []string
+	Matcher     []LabelerMatch
+	Color       string
+	Description string
+	Codeowners  []string
 }
 
 type LabelerMatch struct {
@@ -30,6 +31,7 @@ type labelerYamlMatch struct {
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
 	Color        string             `yaml:"color,omitempty"`
+	Description  string             `yaml:"description,omitempty"`
 	Codeowners   StringOrSlice      `yaml:"codeowners,omitempty"`
 }
 
@@ -125,6 +127,15 @@ func colorOfLabel(matches []labelerYamlMatch) string {
 	return ""
 }
 
+func descriptionOfLabel(matches []labelerYamlMatch) string {
+	for _, m := range matches {
+		if m.Description != "" {
+			return m.Description
+		}
+	}
+	return ""
+}
+
 func codeownersOfLabel(matches []labelerYamlMatch) []string {
 	ownerSet := make(map[string]struct{})
 	for _, m := range matches {
@@ -149,9 +160,10 @@ func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 			}
 		}
 		cfg[label] = LabelerLabelConfig{
-			Matcher:    matchers,
-			Color:      colorOfLabel(matches),
-			Codeowners: codeownersOfLabel(matches),
+			Matcher:     matchers,
+			Color:       colorOfLabel(matches),
+			Description: descriptionOfLabel(matches),
+			Codeowners:  codeownersOfLabel(matches),
 		}
 	}
 	return cfg
