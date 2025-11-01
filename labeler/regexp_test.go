@@ -13,9 +13,11 @@ func TestMatchAnyRegex(t *testing.T) {
 		{[]string{"^feature"}, "feature/abc", true},
 		{[]string{"^hotfix"}, "feature/abc", false},
 		{[]string{"^f.*e$"}, "feature", true},
-		// 否定先読み
 		{[]string{"^(?!main$).*"}, "dev", true},
 		{[]string{"^(?!main$).*"}, "main", false},
+		{[]string{"^(?!ci/)(?!release/).*"}, "feature/abc", true},
+		{[]string{"^(?!ci/)(?!release/).*"}, "ci/abc", false},
+		{[]string{"^(?!ci/)(?!release/).*"}, "release/abc", false},
 	}
 	for _, c := range cases {
 		if got := matchAnyRegex(c.patterns, c.branch); got != c.want {
