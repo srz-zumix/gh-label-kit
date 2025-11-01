@@ -61,6 +61,23 @@ enhancement:
   - color: "a2eeef"  # Light blue color for enhancement labels
 ```
 
+### Description Support
+
+You can specify descriptions for labels using the `description` property:
+
+```yaml
+bug:
+  - changed-files:
+    - any-glob-to-any-file: "**/*.{js,ts}"
+  - color: "d73a4a"  # Red color for bug labels
+  - description: "Something isn't working"
+
+enhancement:
+  - head-branch: "feature/**"
+  - color: "a2eeef"  # Light blue color for enhancement labels
+  - description: "New feature or request"
+```
+
 ### CODEOWNERS Support
 
 You can specify reviewers for labels using the `codeowners` property:
@@ -84,6 +101,7 @@ critical-bug:
     - any-glob-to-any-file: "src/core/**/*"
   - head-branch: "hotfix/**"
   - color: "b60205"  # Dark red
+  - description: "Critical bug that needs immediate attention"
 ```
 
 ### Complex File Patterns
@@ -97,6 +115,7 @@ config-change:
       - "*.yaml"
       - ".github/**/*"
   - color: "fef2c0"  # Light yellow
+  - description: "Configuration file changes"
 ```
 
 ### Team-based Labeling with CODEOWNERS
@@ -110,6 +129,7 @@ needs-review-security:
       - "auth/**/*"
       - "security/**/*"
   - color: "d4c5f9"  # Light purple
+  - description: "Needs review from security team"
 ```
 
 ## Sync Labels

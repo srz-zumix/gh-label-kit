@@ -44,7 +44,7 @@ Supports glob/regex patterns and syncLabels option for label removal. This comma
 - --sync: Remove labels not matching any condition
 - --template/-t: Format JSON output using a Go template
 
-The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color` and `codeowners` features.
+The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color`, `description`, and `codeowners` features.
 
 For detailed configuration documentation, see [docs/labeler-config.md](docs/labeler-config.md).
 
