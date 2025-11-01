@@ -10,6 +10,16 @@ To install the tool, you can use the following command:
 gh extension install srz-zumix/gh-label-kit
 ```
 
+## Global Flags
+
+### --log-level
+
+Set the logging level for output. Available levels: debug, info, warn, error (default: info)
+
+```sh
+gh label-kit --log-level debug <command>
+```
+
 ## Commands & Usage
 
 ---
@@ -34,7 +44,7 @@ Supports glob/regex patterns, extended glob patterns (extglob), and syncLabels o
 - --sync: Remove labels not matching any condition
 - --template/-t: Format JSON output using a Go template
 
-The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color` and `codeowners` features.
+The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color`, `description`, and `codeowners` features.
 
 For detailed configuration documentation, see [docs/labeler-config.md](docs/labeler-config.md).
 
