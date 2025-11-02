@@ -19,3 +19,9 @@ extglob-test:
 extglob-nested-test:
   - changed-files:
     - any-glob-to-all-files: "!(hoge)/*"
+
+extglob-nested-test2:
+  - changed-files:
+    - all-globs-to-all-files:
+      - "*/*"
+      - "!(.github/*)"
