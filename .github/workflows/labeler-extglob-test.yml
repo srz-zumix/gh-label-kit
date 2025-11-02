@@ -32,11 +32,11 @@ jobs:
       - name: Label-kit labeler
         id: label-kit-labeler
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config ${{ env.CONFIGURATION_PATH }} \
             --sync \
             --dryrun \
-            ${{ github.event.number }}) 2>&1 | tee ${{ runner.temp }}/output.txt
+            ${{ github.event.number }} 2>&1 | tee ${{ runner.temp }}/output.txt
       - name: Test labels
         run: |
           grep -q "extglob-test" "${RUNNER_TEMP}/output.txt"
@@ -78,6 +78,7 @@ jobs:
         with:
           sync-labels: true
           configuration-path: ${{ env.CONFIGURATION_PATH }}
+          pr-number: ${{ matrix.pr }}
       - env:
           ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
         run: |
