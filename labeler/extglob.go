@@ -395,7 +395,7 @@ func convertExtglobToRegex2(pattern string) (string, bool) {
 	}
 
 	// Process extglob patterns manually to avoid regex complexity
-	converted := processExtglobManually(pattern)
+	converted := processExtglobToRegex2(pattern)
 
 	// Add anchors if not already present (for non-negation patterns)
 	if !strings.HasPrefix(converted, "^(?!") {
@@ -620,8 +620,7 @@ func matchExtglobExact(pattern, filename string) bool {
 	return false
 }
 
-// processExtglobManually manually processes extglob patterns to avoid regex complexity
-func processExtglobManually(pattern string) string {
+func processExtglobToRegex2(pattern string) string {
 	result := ""
 	i := 0
 
@@ -651,7 +650,7 @@ func processExtglobManually(pattern string) string {
 				alt = strings.TrimSpace(alt)
 				// Recursively process nested extglob in alternatives
 				if containsExtglob(alt) {
-					regexAlternatives[j] = processExtglobManually(alt)
+					regexAlternatives[j] = processExtglobToRegex2(alt)
 				} else {
 					// Use extglob-specific regex conversion for content inside extglob
 					// This allows * and ? to cross path separators (shell behavior)
