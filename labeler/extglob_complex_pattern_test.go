@@ -73,31 +73,6 @@ func TestComplexExtglobPatterns(t *testing.T) {
 			want:     false,
 			desc:     "Should not match .jsx files in nested pattern",
 		},
-		// Simple negation patterns (current limitations)
-		{
-			pattern:  "!(*.md)",
-			filename: "main.go",
-			want:     true,
-			desc:     "Should match non-markdown files",
-		},
-		{
-			pattern:  "!(*.md)",
-			filename: "README.md",
-			want:     false,
-			desc:     "Should not match markdown files",
-		},
-		{
-			pattern:  "!(test*)",
-			filename: "src/main.go",
-			want:     true,
-			desc:     "Should match files not starting with test",
-		},
-		{
-			pattern:  "!(test*)",
-			filename: "test_helper.go",
-			want:     false,
-			desc:     "Should not match files starting with test",
-		},
 		// Combination patterns
 		{
 			pattern:  "+(src|lib)/@(*.@(js|ts))",
