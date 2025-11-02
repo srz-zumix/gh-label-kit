@@ -137,6 +137,27 @@ team-frontend:
     - "@srz-zumix"
 ```
 
+CODEOWNERS is a feature that sends review requests when label conditions are met.
+You can specify when to send review requests using the `--review-request` option:
+
+- **addto**: Send review requests only when labels are added
+- **always**: Send review requests whenever label conditions are met
+- **ready_for_review**: Send review requests when labels are added to non-draft PRs, and also when ready_for_review activity occurs if conditions are met
+- **always_reviewable**: Send review requests when label conditions are met for non-draft PRs
+- **never**: Disable the review request feature
+
+For `ready_for_review` or `always_reviewable` options, you need to include the `ready_for_review` activity as a trigger.
+When running outside of GitHub Actions environment, the `ready_for_review` activity processing will not be performed.
+
+```yaml
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review # for review-request: ready_for_review/always_reviewable
+```
+
 ## Advanced Examples
 
 ### Multiple Conditions

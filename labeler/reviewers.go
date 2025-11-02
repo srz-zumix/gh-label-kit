@@ -16,6 +16,7 @@ import (
 
 const (
 	ReviewRequestModeNone             string = "none"
+	ReviewRequestModeNever            string = "never"
 	ReviewRequestModeAddTo            string = "addto"
 	ReviewRequestModeAlways           string = "always"
 	ReviewRequestModeReadyForReview   string = "ready_for_review"
@@ -23,16 +24,17 @@ const (
 )
 
 var ReviewersRequestModes = []string{
-	ReviewRequestModeNone,
 	ReviewRequestModeAddTo,
 	ReviewRequestModeAlways,
 	ReviewRequestModeReadyForReview,
 	ReviewRequestModeAlwaysReviewable,
+	ReviewRequestModeNever,
+	ReviewRequestModeNone,
 }
 
 func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResult, reviewRequestMode string, syncLabels bool) []string {
 	switch reviewRequestMode {
-	case ReviewRequestModeNone:
+	case ReviewRequestModeNone, ReviewRequestModeNever:
 		return nil
 	case ReviewRequestModeAddTo:
 		return matchResult.AddTo()
