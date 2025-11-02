@@ -139,6 +139,12 @@ func TestBasicExtglobPatterns(t *testing.T) {
 			want:     false,
 			desc:     "Should not match files in nested directories (standard glob: * excludes /). Note: shell extglob would match this as !(test) can match 'src/common'",
 		},
+		{
+			pattern:  "!(test)/*",
+			filename: "main.go",
+			want:     false,
+			desc:     "Should not match files in root directories (standard glob: * excludes /). Note: shell extglob would match this as !(test) can match 'src/common'",
+		},
 		// Basic extglob with ** patterns
 		{
 			pattern:  "!(test)/**",

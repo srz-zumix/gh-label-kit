@@ -15,3 +15,7 @@ no-test-files:
 extglob-test:
   - changed-files:
     - any-glob-to-all-files: "!(hoge/fuga/piyo)"
+
+extglob-nested-test:
+  - changed-files:
+    - any-glob-to-all-files: "!(hoge)/*"
