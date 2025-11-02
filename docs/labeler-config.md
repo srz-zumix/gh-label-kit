@@ -21,6 +21,8 @@ The labeler supports various file matching strategies:
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
 
+[glob patterns](https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns)
+
 ```yaml
 backend:
   - changed-files:
