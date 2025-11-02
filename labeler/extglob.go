@@ -1,3 +1,16 @@
+// Package labeler provides extended glob (extglob) pattern matching functionality
+// that follows bash shell extglob behavior.
+//
+// Key differences from standard glob patterns:
+//   - Inside extglob expressions (e.g., !(pattern), @(pattern|pattern2)), wildcards
+//     (* and ?) can match across path separators (/), following bash shell behavior
+//   - Outside extglob expressions, standard glob rules apply where * does not cross
+//     directory boundaries
+//
+// Examples:
+//   - !(test) matches "dir/file" (wildcard crosses path separator)
+//   - !(*test*) excludes any path containing "test", including "src/test/file.go"
+//   - **/*.go uses standard glob where * only matches within a directory level
 package labeler
 
 import (
@@ -398,7 +411,8 @@ func convertExtglobToRegex2(pattern string) (string, bool) {
 	return converted, true
 }
 
-// convertGlobToRegex converts basic glob patterns to regex with proper path handling
+// convertGlobToRegex converts basic glob patterns to regex with proper path handling.
+// This is used for patterns OUTSIDE of extglob expressions where * should not cross path separators.
 func convertGlobToRegex(pattern string) string {
 	var result strings.Builder
 
@@ -420,14 +434,41 @@ func convertGlobToRegex(pattern string) string {
 					i++ // Skip the next *
 				}
 			} else {
-				// Single * matches any characters except path separator
+				// Single * matches any characters except path separator (standard glob behavior)
 				result.WriteString("[^/]*")
 			}
 		case '?':
-			// ? matches any single character except path separator
+			// ? matches any single character except path separator (standard glob behavior)
 			result.WriteString("[^/]")
 		case '.', '^', '$', '{', '}', '[', ']', '\\':
 			// Escape regex special characters (but not +, |, or parentheses)
+			result.WriteString("\\")
+			result.WriteByte(char)
+		default:
+			result.WriteByte(char)
+		}
+	}
+
+	return result.String()
+}
+
+// convertExtglobContentToRegex converts glob patterns within extglob expressions to regex.
+// In shell extglob, wildcards inside extglob patterns CAN cross path separators.
+// This matches bash's extglob behavior where !(test) can match paths like "dir/file".
+func convertExtglobContentToRegex(pattern string) string {
+	var result strings.Builder
+
+	for i := 0; i < len(pattern); i++ {
+		char := pattern[i]
+		switch char {
+		case '*':
+			// In extglob context, * can cross path separators (shell behavior)
+			result.WriteString(".*")
+		case '?':
+			// In extglob context, ? matches any single character including / (shell behavior)
+			result.WriteString(".")
+		case '.', '^', '$', '{', '}', '[', ']', '\\':
+			// Escape regex special characters
 			result.WriteString("\\")
 			result.WriteByte(char)
 		default:
@@ -612,7 +653,9 @@ func processExtglobManually(pattern string) string {
 				if containsExtglob(alt) {
 					regexAlternatives[j] = processExtglobManually(alt)
 				} else {
-					regexAlternatives[j] = convertGlobToRegex(alt)
+					// Use extglob-specific regex conversion for content inside extglob
+					// This allows * and ? to cross path separators (shell behavior)
+					regexAlternatives[j] = convertExtglobContentToRegex(alt)
 				}
 			}
 			regexContent := strings.Join(regexAlternatives, "|")
@@ -624,14 +667,33 @@ func processExtglobManually(pattern string) string {
 				remainingPattern := pattern[parenEnd+1:]
 				if remainingPattern != "" {
 					// For patterns like !(test)/* or !(test)/**
-					// We need to match the structure but exclude specific patterns
+					// Shell behavior: !(test)/* should match both "main.go" and "src/main.go"
+					// The negation part can match empty string, so we need to handle root files
+
+					// Convert remainder using normal glob rules (not extglob rules)
 					convertedRemainder := convertGlobToRegex(remainingPattern)
 
-					// First part: ensure it doesn't match the negated pattern + remainder
+					// First negative lookahead: exclude exact matches of negated pattern + remainder
 					negatedFull := "^(?!(" + regexContent + ")" + convertedRemainder + "$)"
 
-					// Second part: match the general structure
-					generalPattern := convertGlobToRegex("*" + remainingPattern)
+					var generalPattern string
+					// For shell compatibility, we need to allow matching from the start
+					// !(test)/* should match "main.go" because !(test) can match empty string
+					if strings.HasPrefix(remainingPattern, "/") {
+						// Handle patterns like !(test)/* or !(test)/**
+						// This should match files that start with the remainder pattern
+						// but also files that have some prefix + remainder
+						remainderWithoutSlash := remainingPattern[1:] // Remove leading /
+						convertedWithoutSlash := convertGlobToRegex(remainderWithoutSlash)
+
+						// Match either:
+						// 1. Files that match the remainder directly (like main.go for /*)
+						// 2. Files that have some path + remainder (like src/main.go for /*)
+						generalPattern = "(" + convertedWithoutSlash + "|.*" + convertedRemainder + ")"
+					} else {
+						// For patterns without leading slash
+						generalPattern = convertGlobToRegex("*" + remainingPattern)
+					}
 
 					// Combine: negative lookahead + positive match for structure
 					return negatedFull + "(" + generalPattern + ")$"
@@ -737,7 +799,8 @@ func processComplexPattern(pattern string) string {
 				if containsExtglob(alt) {
 					regexAlternatives[j] = processComplexPattern(alt)
 				} else {
-					regexAlternatives[j] = convertGlobToRegex(alt)
+					// Use extglob-specific regex conversion for content inside extglob
+					regexAlternatives[j] = convertExtglobContentToRegex(alt)
 				}
 			}
 			regexContent := strings.Join(regexAlternatives, "|")

@@ -46,6 +46,14 @@ In addition to standard glob patterns, the labeler supports extended glob patter
 
 Extended glob patterns can be combined with standard doublestar (`**`) patterns and support multiple alternatives using the pipe (`|`) separator.
 
+**Important**: Extended glob patterns follow bash shell extglob behavior. Inside extglob expressions, wildcards (`*` and `?`) can match across path separators (`/`). This differs from standard glob patterns where `*` does not cross directory boundaries.
+
+For example:
+
+- `!(test)` can match `dir/file` (shell behavior)
+- `!(*test*)` will exclude any path containing "test", including `src/test/file.go`
+- In standard glob, `*` only matches within a single directory level
+
 ##### Extended Glob Examples
 
 ```yaml
