@@ -35,16 +35,11 @@ jobs:
           MATCHED_LABELS=$(go run . labeler \
             --config ${{ env.CONFIGURATION_PATH }} \
             --sync \
-            --format json --jq '[ .[].name ] | join(",")' \
-            ${{ github.event.number }})
-          echo "labels=${MATCHED_LABELS}" | tee "${GITHUB_OUTPUT}"
-      - name: Test
-        env:
-          LABEL_KIT_ALL_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
+            --dryrun \
+            ${{ github.event.number }}) 2>&1 | tee ${{ runner.temp }}/output.txt
+      - name: Test labels
         run: |
-          LABEL_KIT_LABELS_SORTED=$(echo "${LABEL_KIT_ALL_LABELS}" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
-          echo "LABEL_KIT_LABELS_SORTED=${LABEL_KIT_LABELS_SORTED}"
-          [[ "${LABEL_KIT_LABELS_SORTED}" =~ "extglob-test" ]]
+          grep -q "extglob-test" "${RUNNER_TEMP}/output.txt"
 
   labeler-extglob-compatibility-test:
     permissions:
