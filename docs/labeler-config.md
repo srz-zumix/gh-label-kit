@@ -12,7 +12,7 @@ Documentation:
 
 ## Configuration Options
 
-### File Matching
+### Changed File Matching
 
 The labeler supports various file matching strategies:
 
@@ -20,8 +20,6 @@ The labeler supports various file matching strategies:
 - **any-glob-to-all-files**: Match if any pattern matches all changed files
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
-
-[glob patterns](https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns)
 
 ```yaml
 backend:
@@ -32,7 +30,11 @@ backend:
       - "**/*.go"
 ```
 
-### Extended Glob Patterns (extglob) (**Experimental**)
+#### Glob Patterns
+
+For the changed files options you provide a [path glob](https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns)
+
+#### Extended Glob Patterns (extglob) (**Experimental**)
 
 In addition to standard glob patterns, the labeler supports extended glob patterns for more advanced matching:
 
@@ -44,7 +46,7 @@ In addition to standard glob patterns, the labeler supports extended glob patter
 
 Extended glob patterns can be combined with standard doublestar (`**`) patterns and support multiple alternatives using the pipe (`|`) separator.
 
-#### Extended Glob Examples
+##### Extended Glob Examples
 
 ```yaml
 # Match files that are NOT markdown
@@ -75,8 +77,8 @@ Labels can be applied based on branch names:
 ```yaml
 feature:
   - head-branch: 
-    - "feature/**"
-    - "feat/**"
+    - "^feature/.*"
+    - "feat/.*"
 
 hotfix:
   - base-branch: 
@@ -84,7 +86,13 @@ hotfix:
     - "master"
 ```
 
-### Color Support
+#### Branch Name Patterns
+
+For the branches you provide a [regexp](https://github.com/dlclark/regexp2) to match against the branch name.
+
+### Label Configuration
+
+#### Color
 
 You can specify colors for labels using the `color` property:
 
@@ -99,7 +107,7 @@ enhancement:
   - color: "a2eeef"  # Light blue color for enhancement labels
 ```
 
-### Description Support
+#### Description
 
 You can specify descriptions for labels using the `description` property:
 

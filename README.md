@@ -48,6 +48,10 @@ The `labeler` command uses a YAML configuration file to define labeling rules. T
 
 For detailed configuration documentation, see [docs/labeler-config.md](docs/labeler-config.md).
 
+#### Environment Variables
+
+- **DISABLE_EXTGLOB**: Set to `1`, `true`, `yes`, or `on` to disable extended glob pattern support. When disabled, extglob patterns are treated as literal characters. (default: enabled)
+
 ---
 
 ### repo copy: Copy labels between repositories
