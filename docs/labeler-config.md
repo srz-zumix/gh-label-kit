@@ -1,6 +1,6 @@
 # Labeler Configuration
 
-The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `color` and `codeowners` features.
+The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `color` `description` and `codeowners` features.
 
 ## Basic Structure
 
