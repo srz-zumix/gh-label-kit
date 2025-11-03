@@ -1,0 +1,27 @@
+# Extended Glob (extglob) Test Configuration
+
+no-markdown:
+  - changed-files:
+    - any-glob-to-all-files: "!(*.md)"
+
+go-files-only:
+  - changed-files:
+    - any-glob-to-all-files: "@(*.go|go.mod|go.sum)"
+
+no-test-files:
+  - changed-files:
+    - any-glob-to-all-files: "!(**/*_test.go)"
+
+extglob-test:
+  - changed-files:
+    - any-glob-to-all-files: "!(hoge/fuga/piyo)"
+
+extglob-nested-test:
+  - changed-files:
+    - any-glob-to-all-files: "!(hoge)/*"
+
+extglob-nested-test2:
+  - changed-files:
+    - all-globs-to-all-files:
+      - "*/*"
+      - "!(.github/*)"

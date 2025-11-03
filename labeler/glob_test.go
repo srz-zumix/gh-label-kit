@@ -13,6 +13,8 @@ func TestMatchGlob(t *testing.T) {
 		{"*.md", "main.go", false},
 		{"docs/*", "docs/readme.md", true},
 		{"docs/*", "src/readme.md", false},
+		{"ab*.jpg", "abc.jpg", true},
+		{"ab*.jpg", "abc/test.jpg", false},
 		{"**", ".github/labeler.yml", true},
 		{"*", ".github/labeler.yml", false},
 		{"*", "aqua.yml", true},

@@ -12,7 +12,7 @@ Documentation:
 
 ## Configuration Options
 
-### File Matching
+### Changed File Matching
 
 The labeler supports various file matching strategies:
 
@@ -20,8 +20,6 @@ The labeler supports various file matching strategies:
 - **any-glob-to-all-files**: Match if any pattern matches all changed files
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
-
-[glob patterns](https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns)
 
 ```yaml
 backend:
@@ -32,6 +30,54 @@ backend:
       - "**/*.go"
 ```
 
+#### Glob Patterns
+
+For the changed files options you provide a [path glob](https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns)
+
+#### Extended Glob Patterns (extglob) (**Experimental**)
+
+In addition to standard glob patterns, the labeler supports extended glob patterns for more advanced matching:
+
+- **!(pattern)**: Match anything except the pattern (negation)
+- **?(pattern)**: Match zero or one occurrence of the pattern
+- **+(pattern)**: Match one or more occurrences of the pattern
+- ***(pattern)**: Match zero or more occurrences of the pattern
+- **@(pattern)**: Match exactly one occurrence of the pattern
+
+Extended glob patterns can be combined with standard doublestar (`**`) patterns and support multiple alternatives using the pipe (`|`) separator.
+
+**Important**: Extended glob patterns follow bash shell extglob behavior. Inside extglob expressions, wildcards (`*` and `?`) can match across path separators (`/`). This differs from standard glob patterns where `*` does not cross directory boundaries.
+
+For example:
+
+- `!(test)` can match `dir/file` (shell behavior)
+- `!(*test*)` will exclude any path containing "test", including `src/test/file.go`
+- In standard glob, `*` only matches within a single directory level
+
+##### Extended Glob Examples
+
+```yaml
+# Match files that are NOT markdown
+no-markdown:
+  - changed-files:
+    - any-glob-to-any-file: "!(*.md)"
+
+# Match only Go source files or Go modules
+go-files-only:
+  - changed-files:
+    - any-glob-to-any-file: "@(*.go|go.mod|go.sum)"
+
+# Match files that are NOT test files
+no-tests:
+  - changed-files:
+    - any-glob-to-any-file: "!(**/*_test.go)"
+
+# Match either source code or documentation
+source-or-docs:
+  - changed-files:
+    - any-glob-to-any-file: "@(src/**|docs/**)"
+```
+
 ### Branch Matching
 
 Labels can be applied based on branch names:
@@ -39,8 +85,8 @@ Labels can be applied based on branch names:
 ```yaml
 feature:
   - head-branch: 
-    - "feature/**"
-    - "feat/**"
+    - "^feature/.*"
+    - "feat/.*"
 
 hotfix:
   - base-branch: 
@@ -48,7 +94,13 @@ hotfix:
     - "master"
 ```
 
-### Color Support
+#### Branch Name Patterns
+
+For the branches you provide a [regexp](https://github.com/dlclark/regexp2) to match against the branch name.
+
+### Label Configuration
+
+#### Color
 
 You can specify colors for labels using the `color` property:
 
@@ -63,7 +115,7 @@ enhancement:
   - color: "a2eeef"  # Light blue color for enhancement labels
 ```
 
-### Description Support
+#### Description
 
 You can specify descriptions for labels using the `description` property:
 

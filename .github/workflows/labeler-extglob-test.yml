@@ -1,0 +1,107 @@
+name: "Labeler extglob Test"
+on:
+ pull_request:
+
+jobs:
+  labeler-extglob-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      CONFIGURATION_PATH: .github/labeler-extglob-test.yml
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit labeler
+        id: label-kit-labeler
+        run: |
+          go run . labeler \
+            --config ${{ env.CONFIGURATION_PATH }} \
+            --sync \
+            --dryrun \
+            ${{ github.event.number }} 2>&1 | tee ${{ runner.temp }}/output.txt
+      - name: Test labels
+        run: |
+          grep -q "extglob-test" "${RUNNER_TEMP}/output.txt"
+
+  labeler-extglob-compatibility-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      CONFIGURATION_PATH: .github/labeler-extglob-test.yml
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pr:
+          - 13
+          - 17
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - uses: actions/labeler@v6
+        id: labeler
+        with:
+          sync-labels: true
+          configuration-path: ${{ env.CONFIGURATION_PATH }}
+          pr-number: ${{ matrix.pr }}
+      - env:
+          ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+        run: |
+          echo "Labels: ${ALL_LABELS}"
+
+      - name: Label-kit labeler
+        id: label-kit-labeler
+        env:
+          TARGET_PR_NUMBER: ${{ matrix.pr }}
+        run: |
+          MATCHED_LABELS=$(go run . labeler \
+            --config ${{ env.CONFIGURATION_PATH }} \
+            --sync \
+            --format json --jq '[ .[].name ] | join(",")' \
+            ${TARGET_PR_NUMBER})
+          echo "labels=${MATCHED_LABELS}" 2>&1 | tee "${GITHUB_OUTPUT}"
+      - name: Test
+        env:
+          LABELER_ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+          LABEL_KIT_ALL_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
+        run: |
+          LABELER_LABELS_SORTED=$(echo "${LABELER_ALL_LABELS}" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
+          LABEL_KIT_LABELS_SORTED=$(echo "${LABEL_KIT_ALL_LABELS}" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
+          echo "LABELER_LABELS_SORTED=${LABELER_LABELS_SORTED}"
+          echo "LABEL_KIT_LABELS_SORTED=${LABEL_KIT_LABELS_SORTED}"
+          test "${LABELER_LABELS_SORTED}" == "${LABEL_KIT_LABELS_SORTED}"
