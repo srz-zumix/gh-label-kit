@@ -109,3 +109,47 @@ jobs:
         run: |
           test "${SYNC_ENABLE_LABELS}" == "sync-test"
           test "${SYNC_DISABLE_LABELS}" == ""
+
+  remote-config-path-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config-path:
+          - srz-zumix/labeler-action@v0
+          - srz-zumix/labeler-action/.github/labeler-sync-test-enable.yml@v0
+          - https://github.com/srz-zumix/labeler-action
+          - https://github.com/srz-zumix/labeler-action/blob/main/.github/labeler-sync-test-enable.yml
+          - https://github.com/srz-zumix/labeler-action/tree/v0
+          - ./.github/labeler-codeowners-test-enable.yml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit load other repo config
+        env:
+          CONFIGURATION_PATH: ${{ matrix.config-path }}
+        run: |
+          go run . labeler \
+            --config ${CONFIGURATION_PATH} \
+            --dryrun \
+            1

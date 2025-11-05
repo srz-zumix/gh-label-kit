@@ -35,6 +35,9 @@ Supports glob/regex patterns, extended glob patterns (extglob), and syncLabels o
 
 - --color: Use color in diff output (auto|never|always, default: auto)
 - --config: Path to labeler config YAML file (default: .github/labeler.yml)
+  - path
+  - github url (https://github.com/owner/repo[/tree/ref|/blob/ref/path])
+  - actions uses format (owner/repo[/path]@ref)
 - --dryrun/-n: Dry run: do not actually set labels
 - --format: Output format (json)
 - --jq: Filter JSON output using a jq expression
