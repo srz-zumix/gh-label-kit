@@ -86,6 +86,42 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 	}
 }
 
+func TestCheckMatchConfigs_BranchAndFiles_All(t *testing.T) {
+	cfg := LabelerConfig{
+		"label1": LabelerLabelConfig{
+			Matcher: []LabelerMatch{
+				{All: []LabelerRule{{
+					ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}},
+					BaseBranch:   []any{"base-branch"},
+					HeadBranch:   []any{"base-branch"},
+				}}},
+			},
+		},
+		"label2": LabelerLabelConfig{
+			Matcher: []LabelerMatch{
+				{All: []LabelerRule{{
+					ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}},
+					BaseBranch:   []any{"base-branch"},
+					HeadBranch:   []any{"head-branch"},
+				}}},
+			},
+		},
+	}
+	pr := &github.PullRequest{
+		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
+		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
+		Labels: []*github.Label{},
+	}
+	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	result := CheckMatchConfigs(cfg, files, pr)
+	if result.IsMatched("label1") {
+		t.Errorf("label1 should not be matched")
+	}
+	if !result.IsMatched("label2") {
+		t.Errorf("label2 should be matched")
+	}
+}
+
 func TestCheckMatchConfigs_BranchAndFiles_ColorOnly(t *testing.T) {
 	cfg := LabelerConfig{
 		"label1": LabelerLabelConfig{
