@@ -16,6 +16,8 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/render"
 )
 
+var defaultConfigPath = ".github/labeler.yml"
+
 type LabelerOptions struct {
 	Exporter cmdutil.Exporter
 }
@@ -53,7 +55,20 @@ func NewLabelerCmd() *cobra.Command {
 				if ref == "" {
 					ref = os.Getenv("GITHUB_SHA")
 				}
-				cfg, err = labeler.LoadConfigFromRepo(ctx, client, repository, configPath, &ref)
+				contentPaths, err := parser.ParseContentPath(configPath)
+				if err != nil {
+					return fmt.Errorf("failed to parse config path: %w", err)
+				}
+				if contentPaths.Ref != nil {
+					ref = *contentPaths.Ref
+				}
+				if contentPaths.Repo == nil {
+					contentPaths.Repo = &repository
+				}
+				if contentPaths.Path == nil {
+					contentPaths.Path = &defaultConfigPath
+				}
+				cfg, err = labeler.LoadConfigFromRepo(ctx, client, *contentPaths.Repo, *contentPaths.Path, contentPaths.Ref)
 				if err != nil {
 					return fmt.Errorf("failed to load config from repository: %w", err)
 				}
@@ -132,7 +147,7 @@ func NewLabelerCmd() *cobra.Command {
 	f := cmd.Flags()
 	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", render.ColorFlagAuto, render.ColorFlags, "Use color in diff output")
 	f.StringVarP(&repo, "repo", "R", "", "Target repository in the format 'owner/repo'")
-	f.StringVar(&configPath, "config", ".github/labeler.yml", "Path to labeler config YAML file")
+	f.StringVar(&configPath, "config", defaultConfigPath, "Path to labeler config YAML file")
 	f.BoolVar(&nameOnly, "name-only", false, "Output only team names")
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
