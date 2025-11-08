@@ -126,3 +126,24 @@ func TestMatchGlob_CaseSensitiveGlob(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchGlob_NegationGlob(t *testing.T) {
+	cases := []struct {
+		pattern, filename string
+		want              bool
+	}{
+		{"!*.go", "main.go", false},
+		{"!*.go", "README.md", true},
+		{"!docs/*", "docs/readme.md", false},
+		{"!docs/*", "src/readme.md", true},
+		{"!**/*.test.js", "src/test.js", true},
+		{"!**/*.test.js", "src/utils.test.js", false},
+		{"!*.md", "file.txt", true},
+		{"!*.md", "file.md", false},
+	}
+	for _, c := range cases {
+		if got := matchGlob(c.pattern, c.filename); got != c.want {
+			t.Errorf("matchGlob(%q, %q) = %v, want %v", c.pattern, c.filename, got, c.want)
+		}
+	}
+}
