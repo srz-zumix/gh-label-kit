@@ -59,7 +59,7 @@ func TestMatchGlobWithDisabledExtglob(t *testing.T) {
 			pattern:  "!(test).js",
 			filename: "main.js",
 			disabled: true,
-			want:     false, // Treated as literal, doesn't match
+			want:     true, // ! is treated as negation, !(test).js doesn't match, so result is inverted to true
 		},
 	}
 

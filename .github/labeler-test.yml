@@ -77,8 +77,13 @@ self-test-all-ci:
       all-globs-to-any-file : '____no_match____'
       all-globs-to-all-files: '____no_match____'
 
-self-test-src:
+self-test-negate:
 - changed-files:
   - all-globs-to-any-file:
-    - '!(.github/*)'
-    - '!(docs/*)'
+    - '!.github/*'
+    - '!docs/*'
+
+self-test-extglob:
+- changed-files:
+  - all-globs-to-any-file:
+    - '@(docs|)*.md'
