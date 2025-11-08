@@ -86,4 +86,4 @@ self-test-negate:
 self-test-extglob:
 - changed-files:
   - all-globs-to-any-file:
-    - '(docs|)*.md'
+    - '@(docs|)*.md'
