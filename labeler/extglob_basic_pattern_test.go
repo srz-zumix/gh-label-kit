@@ -177,6 +177,18 @@ func TestBasicExtglobPatterns(t *testing.T) {
 			desc:     "Should not match files outside src/lib with **",
 		},
 		{
+			pattern:  "@(docs|)*.md",
+			filename: "README.md",
+			want:     true,
+			desc:     "Should match Markdown files in docs directory",
+		},
+		{
+			pattern:  "@(docs|*)*.md",
+			filename: "README.md",
+			want:     true,
+			desc:     "Should match Markdown files in docs directory",
+		},
+		{
 			pattern:  "@(config|docs)/**/*.json",
 			filename: "config/app.json",
 			want:     true,
@@ -193,6 +205,43 @@ func TestBasicExtglobPatterns(t *testing.T) {
 			filename: "src/data.json",
 			want:     false,
 			desc:     "Should not match JSON files outside config/docs",
+		},
+		// Test empty string in OR conditions
+		{
+			pattern:  "@(|docs)*.md",
+			filename: "README.md",
+			want:     true,
+			desc:     "Should match Markdown files with empty string alternative (leading)",
+		},
+		{
+			pattern:  "@(|docs)*.md",
+			filename: "docs.md",
+			want:     true,
+			desc:     "Should match Markdown files starting with docs (leading empty)",
+		},
+		{
+			pattern:  "@(src/|)**/*.go",
+			filename: "main.go",
+			want:     true,
+			desc:     "Should match Go files at root with empty string alternative and **",
+		},
+		{
+			pattern:  "@(src/|)**/*.go",
+			filename: "src/util/helper.go",
+			want:     true,
+			desc:     "Should match Go files in src directory with trailing slash",
+		},
+		{
+			pattern:  "?(|test_)*.go",
+			filename: "main.go",
+			want:     true,
+			desc:     "Should match Go files without prefix (zero-or-one with empty)",
+		},
+		{
+			pattern:  "?(|test_)*.go",
+			filename: "test_helper.go",
+			want:     true,
+			desc:     "Should match Go files with test_ prefix (zero-or-one with empty)",
 		},
 	}
 
