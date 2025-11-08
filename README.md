@@ -187,6 +187,82 @@ Set (replace) all labels for a issue in the repository.
 
 ---
 
+### discussion add: Add label(s) to discussion
+
+```sh
+gh label-kit discussion add <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Add one or more labels to a discussion in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### discussion clear: Remove all labels from discussion
+
+```sh
+gh label-kit discussion clear <number> [--repo <owner/repo>]
+```
+
+Remove all labels from a discussion in the repository.
+
+- --repo/-R: Repository in the format 'owner/repo'
+
+---
+
+### discussion list: List labels for discussion
+
+```sh
+gh label-kit discussion list <number> [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+List all labels attached to a discussion in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### discussion remove: Remove label(s) from discussion
+
+```sh
+gh label-kit discussion remove <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Remove one or more labels from a discussion in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### discussion set: Set labels for discussion (replace all)
+
+```sh
+gh label-kit discussion set <number> <label>... [--repo <owner/repo>] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Set (replace) all labels for a discussion in the repository.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
 ### milestone list: List labels for milestone
 
 ```sh
