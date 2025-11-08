@@ -278,5 +278,3 @@ List all labels attached to issues and PRs in the specified milestone.
 - --template/-t: Format JSON output using a Go template
 
 [labeler]: https://github.com/actions/labeler
-
-test
