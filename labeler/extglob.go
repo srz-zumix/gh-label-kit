@@ -188,10 +188,8 @@ func splitExtglobAlternatives(pattern string) []string {
 		}
 	}
 
-	// Add the last alternative
-	if current.Len() > 0 {
-		alternatives = append(alternatives, current.String())
-	}
+	// Add the last alternative (even if empty, as empty strings are valid alternatives)
+	alternatives = append(alternatives, current.String())
 
 	return alternatives
 }
@@ -647,7 +645,10 @@ func processExtglobToRegex2(pattern string) string {
 			alternatives := splitExtglobAlternatives(content)
 			regexAlternatives := make([]string, len(alternatives))
 			for j, alt := range alternatives {
-				alt = strings.TrimSpace(alt)
+				// Only trim if there are actual spaces, preserve empty strings
+				if len(alt) > 0 && (alt[0] == ' ' || alt[len(alt)-1] == ' ') {
+					alt = strings.TrimSpace(alt)
+				}
 				// Recursively process nested extglob in alternatives
 				if containsExtglob(alt) {
 					regexAlternatives[j] = processExtglobToRegex2(alt)

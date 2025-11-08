@@ -15,7 +15,20 @@ func matchGlob(pattern, filename string) bool {
 		return matchComplexGlob(pattern, filename)
 	}
 
+	// Check for negation pattern (! at the beginning) only when extglob is enabled
+	negate := false
+	if len(pattern) > 0 && pattern[0] == '!' {
+		negate = true
+		pattern = pattern[1:]
+	}
+
 	// Use regular doublestar matching for standard patterns
 	matched, err := doublestar.PathMatch(pattern, filename)
-	return err == nil && matched
+	result := err == nil && matched
+
+	// Invert the result if negation is enabled
+	if negate {
+		return !result
+	}
+	return result
 }
