@@ -81,3 +81,4 @@ self-test-src:
 - changed-files:
   - all-globs-to-any-file:
     - '!.github/*'
+    - '!docs/*'
