@@ -49,6 +49,6 @@ func NewRemoveCmd() *cobra.Command {
 	f := cmd.Flags()
 	cmdutil.StringEnumFlag(cmd, &colorFlag, "color", "", render.ColorFlagAuto, render.ColorFlags, "Use color in diff output")
 	f.StringVarP(&repo, "repo", "R", "", "Repository in the format 'owner/repo'")
-	cmdutil.AddFormatFlags(cmd, nil)
+	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 	return cmd
 }
