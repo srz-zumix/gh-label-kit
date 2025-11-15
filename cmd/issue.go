@@ -19,6 +19,7 @@ func NewIssueCmd() *cobra.Command {
 	cmd.AddCommand(issue.NewRemoveCmd())
 	cmd.AddCommand(issue.NewClearCmd())
 	cmd.AddCommand(issue.NewSetCmd())
+	cmd.AddCommand(issue.NewSearchCmd())
 	return cmd
 }
 

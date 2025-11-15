@@ -18,6 +18,7 @@ func NewDiscussionCmd() *cobra.Command {
 	cmd.AddCommand(discussion.NewRemoveCmd())
 	cmd.AddCommand(discussion.NewClearCmd())
 	cmd.AddCommand(discussion.NewSetCmd())
+	cmd.AddCommand(discussion.NewSearchCmd())
 	return cmd
 }
 
