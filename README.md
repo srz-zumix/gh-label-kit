@@ -171,6 +171,24 @@ Remove one or more labels from a issue in the repository.
 
 ---
 
+### issue search: Search issues by query
+
+```sh
+gh label-kit issue search [query...] [--repo <owner/repo>] [--owner <organization>] [--label <label>...] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Search issues in the repository using a search query. The query can include label filters and other search criteria.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --label/-l: Filter issues by labels (can be specified multiple times)
+- --owner: Specify the organization name
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
 ### issue set: Set labels for issue (replace all)
 
 ```sh
@@ -242,6 +260,24 @@ Remove one or more labels from a discussion in the repository.
 - --color: Use color in diff output (always|never|auto, default: auto)
 - --format: Output format (json)
 - --jq: Filter JSON output using a jq expression
+- --repo/-R: Repository in the format 'owner/repo'
+- --template/-t: Format JSON output using a Go template
+
+---
+
+### discussion search: Search discussions by query
+
+```sh
+gh label-kit discussion search [query...] [--repo <owner/repo>] [--owner <organization>] [--label <label>...] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>]
+```
+
+Search discussions in the repository using a search query. The query can include label filters and other search criteria.
+
+- --color: Use color in diff output (always|never|auto, default: auto)
+- --format: Output format (json)
+- --jq: Filter JSON output using a jq expression
+- --label/-l: Filter discussions by labels (can be specified multiple times)
+- --owner: Specify the organization name
 - --repo/-R: Repository in the format 'owner/repo'
 - --template/-t: Format JSON output using a Go template
 
