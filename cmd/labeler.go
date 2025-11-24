@@ -60,7 +60,9 @@ func NewLabelerCmd() *cobra.Command {
 					return fmt.Errorf("failed to parse config path: %w", err)
 				}
 				if contentPaths.Ref == nil {
-					contentPaths.Ref = &ref
+					if contentPaths.Repo == nil {
+						contentPaths.Ref = &ref
+					}
 				}
 				if contentPaths.Repo == nil {
 					contentPaths.Repo = &repository
