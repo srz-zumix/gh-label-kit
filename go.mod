@@ -6,8 +6,8 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/cli/go-gh/v2 v2.13.0
 	github.com/dlclark/regexp2 v1.11.5
-	github.com/google/go-github/v73 v73.0.0
-	github.com/srz-zumix/go-gh-extension v0.2.1
+	github.com/google/go-github/v79 v79.0.0
+	github.com/srz-zumix/go-gh-extension v0.2.2
 )
 
 require (
@@ -40,7 +40,6 @@ require (
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/google/go-github/v75 v75.0.0 // indirect
-	github.com/google/go-github/v79 v79.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -67,7 +66,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7 // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
