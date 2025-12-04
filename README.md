@@ -20,6 +20,16 @@ Set the logging level for output. Available levels: debug, info, warn, error (de
 gh label-kit --log-level debug <command>
 ```
 
+### --read-only
+
+Run in read-only mode to prevent write operations.
+This option is useful for safely testing commands or verifying what changes would be made without actually applying them.
+When enabled, all API calls that would modify data (create, update, delete operations) will be blocked.
+
+```sh
+gh label-kit --read-only <command>
+```
+
 ## Commands & Usage
 
 ---
