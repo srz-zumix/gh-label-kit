@@ -1,6 +1,7 @@
 package labeler
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-github/v79/github"
@@ -42,7 +43,8 @@ func TestCheckMatchConfigs_BranchAndFiles_Any(t *testing.T) {
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if !result.IsMatched("label1") {
 		t.Errorf("label1 should be matched")
 	}
@@ -77,7 +79,8 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
 		t.Errorf("label1 should not be matched")
 	}
@@ -113,7 +116,8 @@ func TestCheckMatchConfigs_BranchAndFiles_All(t *testing.T) {
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
 		t.Errorf("label1 should not be matched")
 	}
@@ -134,7 +138,8 @@ func TestCheckMatchConfigs_BranchAndFiles_ColorOnly(t *testing.T) {
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
 		t.Errorf("label1 should not be matched")
 	}
@@ -152,7 +157,8 @@ func TestCheckMatchConfigs_BranchAndFiles_DescriptionOnly(t *testing.T) {
 		Labels: []*github.Label{},
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
 		t.Errorf("label1 should not be matched")
 	}
@@ -173,7 +179,8 @@ func TestCheckMatchConfigs_RegexAndDotOption(t *testing.T) {
 	}
 	files := []*github.CommitFile{{Filename: github.Ptr(".foo.txt")}}
 	// matchGlob uses doublestar, which matches dotfiles by default
-	result := CheckMatchConfigs(cfg, files, pr)
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
 
 	if !result.IsMatched("dotlabel") {
 		t.Errorf("dotlabel should be matched for dotfile")

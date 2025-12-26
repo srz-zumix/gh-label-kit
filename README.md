@@ -40,8 +40,8 @@ gh label-kit --read-only <command>
 gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>] [--name-only] [--ref <string>]
 ```
 
-Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, and a YAML config file (default: .github/labeler.yml).
-Supports glob/regex patterns, extended glob patterns (extglob), and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler] with additional extglob support.
+Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, PR author, and a YAML config file (default: .github/labeler.yml).
+Supports glob/regex patterns, extended glob patterns (extglob), author matching (including team membership), and syncLabels option for label removal. This command behaves the same as [actions/labeler][labeler] with additional extglob and author support.
 
 - --color: Use color in diff output (auto|never|always, default: auto)
 - --config: Path to labeler config YAML file (default: .github/labeler.yml)
@@ -57,7 +57,7 @@ Supports glob/regex patterns, extended glob patterns (extglob), and syncLabels o
 - --sync: Remove labels not matching any condition
 - --template/-t: Format JSON output using a Go template
 
-The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `color`, `description`, and `codeowners` features.
+The `labeler` command uses a YAML configuration file to define labeling rules. The configuration format is compatible with [actions/labeler][labeler], with additional support for `author`, `color`, `description`, and `codeowners` features.
 
 For detailed configuration documentation, see [docs/labeler-config.md](docs/labeler-config.md).
 

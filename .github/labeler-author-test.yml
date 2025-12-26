@@ -1,0 +1,45 @@
+# Author matching test configuration
+# Tests various author patterns including regex and team membership
+
+# Test regex pattern matching for bot users
+author-bot:
+- author: '.*\[bot\]$'
+
+# Test exact author name matching
+author-exact:
+- author: 'srz-zumix'
+
+# Test regex pattern matching
+author-regex:
+- author: 'srz-.*'
+
+# Test multiple author patterns (any match)
+author-multi:
+- author:
+  - 'srz-zumix'
+  - 'dependabot\[bot\]'
+
+# Test author combined with changed-files (all conditions)
+author-with-files:
+- all:
+  - author: 'srz-.*'
+  - changed-files:
+    - any-glob-to-any-file: '**'
+
+# Test author in any condition
+author-any:
+- any:
+  - author: 'no-match-user'
+  - author: 'srz-zumix'
+
+# Test negation pattern (not matching specific user)
+author-not-bot:
+- author: '^(?!.*\[bot\]$).*$'
+
+# Test team membership (if configured)
+# author-team:
+# - author: '@srz-zumix/test-team'
+
+# Test negated team membership (if configured)
+# author-not-team:
+# - author: '!@srz-zumix/test-team'

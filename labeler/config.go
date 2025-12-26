@@ -30,6 +30,7 @@ type labelerYamlMatch struct {
 	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Author       StringOrSliceRaw   `yaml:"author,omitempty"`
 	Color        string             `yaml:"color,omitempty"`
 	Description  string             `yaml:"description,omitempty"`
 	Codeowners   StringOrSlice      `yaml:"codeowners,omitempty"`
@@ -39,6 +40,7 @@ type LabelerRule struct {
 	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
 	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
 	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Author       StringOrSliceRaw   `yaml:"author,omitempty"`
 }
 
 type ChangedFilesRule struct {
@@ -110,11 +112,17 @@ func (m *labelerYamlMatch) GetBaseBranch() []string {
 func (m *labelerYamlMatch) GetHeadBranch() []string {
 	return flattenStringOrSliceRaw(m.HeadBranch)
 }
+func (m *labelerYamlMatch) GetAuthor() []string {
+	return flattenStringOrSliceRaw(m.Author)
+}
 func (r *LabelerRule) GetBaseBranch() []string {
 	return flattenStringOrSliceRaw(r.BaseBranch)
 }
 func (r *LabelerRule) GetHeadBranch() []string {
 	return flattenStringOrSliceRaw(r.HeadBranch)
+}
+func (r *LabelerRule) GetAuthor() []string {
+	return flattenStringOrSliceRaw(r.Author)
 }
 
 // ColorOfLabel returns the color string for a label (if any), allowing for color-only elements in the config.
@@ -178,6 +186,10 @@ func (m *labelerYamlMatch) Normalize() {
 	if m.HeadBranch != nil {
 		anyRules = append(anyRules, LabelerRule{HeadBranch: m.GetHeadBranch()})
 		m.HeadBranch = nil // Clear to avoid duplication
+	}
+	if m.Author != nil {
+		anyRules = append(anyRules, LabelerRule{Author: m.GetAuthor()})
+		m.Author = nil // Clear to avoid duplication
 	}
 	if len(m.ChangedFiles) > 0 {
 		anyRules = append(anyRules, LabelerRule{ChangedFiles: m.ChangedFiles})

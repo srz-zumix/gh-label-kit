@@ -87,7 +87,8 @@ func NewLabelerCmd() *cobra.Command {
 					return fmt.Errorf("failed to get PR files for %s: %w", prNumber, err)
 				}
 
-				result := labeler.CheckMatchConfigs(cfg, changedFiles, pr)
+				matcher := labeler.NewMatcher(ctx, client)
+				result := matcher.CheckMatchConfigs(cfg, changedFiles, pr)
 				allLabels := result.GetLabels(syncLabels)
 				labeledCodeOwners := labeler.NewLabeledCodeOwners(ctx, client, repository, pr, cfg, reviewRequest)
 				reviewRequestLabels := labeler.GetReviewRequestTargetLabels(pr, result, reviewRequest, syncLabels)
