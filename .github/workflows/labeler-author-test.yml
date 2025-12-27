@@ -1,0 +1,173 @@
+name: "Labeler Author Test"
+on:
+  pull_request:
+
+jobs:
+  author-test:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CONFIGURATION_PATH: .github/labeler-author-test.yml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Get PR author
+        id: pr-author
+        run: |
+          AUTHOR=$(gh pr view ${{ github.event.number }} --json author --jq '.author.login')
+          echo "author=${AUTHOR}" | tee -a "${GITHUB_OUTPUT}"
+          echo "PR Author: ${AUTHOR}"
+
+      - name: Label-kit labeler (dryrun)
+        id: label-kit-labeler
+        run: |
+          go run . labeler \
+            --config ${CONFIGURATION_PATH} \
+            --sync \
+            --dryrun \
+            ${{ github.event.number }} 2>&1 | tee ${{ runner.temp }}/output.txt
+
+      - name: Test author matching
+        env:
+          PR_AUTHOR: ${{ steps.pr-author.outputs.author }}
+        run: |
+          echo "PR Author: ${PR_AUTHOR}"
+          cat "${RUNNER_TEMP}/output.txt"
+
+          # Check if author-with-files is matched (should always match for any PR)
+          if ! grep -q "author-with-files" "${RUNNER_TEMP}/output.txt"; then
+            echo "::error::author-with-files should be matched"
+            exit 1
+          fi
+
+          # Check author-specific labels based on PR author
+          if [[ "${PR_AUTHOR}" == "srz-zumix" ]]; then
+            # Test exact match
+            if ! grep -q "author-exact" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-exact should be matched for srz-zumix"
+              exit 1
+            fi
+            # Test regex match
+            if ! grep -q "author-regex" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-regex should be matched for srz-zumix"
+              exit 1
+            fi
+            # Test multi author match
+            if ! grep -q "author-multi" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-multi should be matched for srz-zumix"
+              exit 1
+            fi
+            # Test any condition match
+            if ! grep -q "author-any" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-any should be matched for srz-zumix"
+              exit 1
+            fi
+            # Test not-bot match (srz-zumix is not a bot)
+            if ! grep -q "author-not-bot" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-not-bot should be matched for srz-zumix"
+              exit 1
+            fi
+            # Test bot label should not match
+            if grep -q "author-bot" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-bot should NOT be matched for srz-zumix"
+              exit 1
+            fi
+          fi
+
+          # Check for bot authors
+          if [[ "${PR_AUTHOR}" == *"[bot]" ]]; then
+            # Test bot match
+            if ! grep -q "author-bot" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-bot should be matched for bot user"
+              exit 1
+            fi
+            # Test not-bot should not match
+            if grep -q "author-not-bot" "${RUNNER_TEMP}/output.txt"; then
+              echo "::error::author-not-bot should NOT be matched for bot user"
+              exit 1
+            fi
+          fi
+
+          echo "All author matching tests passed!"
+
+  # Test with specific PR numbers for bot authors
+  bot-author-test:
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CONFIGURATION_PATH: .github/labeler-author-test.yml
+      # PR created by dependabot or other bot (update this PR number as needed)
+      BOT_PR: 78
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Get Bot PR author
+        id: bot-pr-author
+        continue-on-error: true
+        run: |
+          AUTHOR=$(gh pr view ${BOT_PR} --json author --jq '.author.login')
+          echo "author=${AUTHOR}" | tee -a "${GITHUB_OUTPUT}"
+          echo "Bot PR Author: ${AUTHOR}"
+
+      - name: Label-kit labeler for bot PR (dryrun)
+        id: bot-label-kit
+        continue-on-error: true
+        run: |
+          go run . labeler \
+            --config ${CONFIGURATION_PATH} \
+            --sync \
+            --dryrun \
+            ${BOT_PR} 2>&1 | tee ${{ runner.temp }}/bot-output.txt
+
+      - name: Test bot author matching
+        env:
+          BOT_AUTHOR: ${{ steps.bot-pr-author.outputs.author }}
+        if: steps.bot-pr-author.outcome == 'success'
+        run: |
+          echo "Bot PR Author: ${BOT_AUTHOR}"
+          cat "${RUNNER_TEMP}/bot-output.txt"
+
+          if [[ "${BOT_AUTHOR}" == *"[bot]" ]]; then
+            if ! grep -q "author-bot" "${RUNNER_TEMP}/bot-output.txt"; then
+              echo "::error::author-bot should be matched for bot user ${BOT_AUTHOR}"
+              exit 1
+            fi
+            echo "Bot author matching test passed!"
+          else
+            echo "::warning::PR ${BOT_PR} author is not a bot, skipping bot-specific tests"
+          fi

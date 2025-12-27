@@ -1,6 +1,6 @@
 # Labeler Configuration
 
-The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `color` `description` and `codeowners` features.
+The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `author`, `color`, `description`, and `codeowners` features.
 
 ## Basic Structure
 
@@ -98,7 +98,71 @@ hotfix:
 
 For the branches you provide a [regexp](https://github.com/dlclark/regexp2) to match against the branch name.
 
-### Label Configuration
+### Author Matching
+
+Labels can be applied based on PR author. This is useful for labeling bot PRs, team member PRs, or specific user PRs.
+
+```yaml
+# Match bot users
+bot:
+  - author: '.*\[bot\]$'
+
+# Match specific user
+user-pr:
+  - author: 'username'
+
+# Match multiple users
+team-pr:
+  - author:
+    - 'user1'
+    - 'user2'
+```
+
+#### Author Patterns
+
+For authors, you can use:
+
+- **Regular expressions**: Match against the PR author username using [regexp2](https://github.com/dlclark/regexp2)
+- **Team membership**: `@org/team-slug` - Match if the author is a member of the specified team
+- **Negated team membership**: `!@org/team-slug` - Match if the author is NOT a member of the specified team
+
+##### Team Membership Examples
+
+```yaml
+# Match team members
+internal-team:
+  - author: '@myorg/developers'
+
+# Match non-team members (external contributors)
+external-contributor:
+  - author: '!@myorg/developers'
+
+# Combine with other conditions
+team-feature:
+  - all:
+    - author: '@myorg/frontend-team'
+    - head-branch: 'feature/.*'
+```
+
+##### Common Author Patterns
+
+```yaml
+# Match Dependabot PRs
+dependabot:
+  - author: 'dependabot\[bot\]'
+
+# Match any bot PR
+bot:
+  - author: '.*\[bot\]$'
+
+# Match non-bot PRs
+human:
+  - author: '^(?!.*\[bot\]$).*$'
+
+# Match specific username prefix
+team-prefix:
+  - author: '^team-.*'
+```
 
 #### Color
 
