@@ -39,23 +39,21 @@ jobs:
       - name: Label-kit labeler (dryrun)
         id: label-kit-labeler
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config ${CONFIGURATION_PATH} \
+            --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            ${{ github.event.number }})
-          echo "labels=${MATCHED_LABELS}" | tee -a "${GITHUB_OUTPUT}"
+            ${{ github.event.number }} 2>&1 | tee ${{ runner.temp }}/output.txt
 
       - name: Test author matching
         env:
           PR_AUTHOR: ${{ steps.pr-author.outputs.author }}
-          MATCHED_LABELS: ${{ steps.label-kit-labeler.outputs.labels }}
         run: |
           echo "PR Author: ${PR_AUTHOR}"
-          echo "Matched Labels: ${MATCHED_LABELS}"
+          cat "${RUNNER_TEMP}/output.txt"
 
           # Check if author-with-files is matched (should always match for any PR)
-          if [[ "${MATCHED_LABELS}" != *"author-with-files"* ]]; then
+          if ! grep -q "author-with-files" "${RUNNER_TEMP}/output.txt"; then
             echo "::error::author-with-files should be matched"
             exit 1
           fi
@@ -63,32 +61,32 @@ jobs:
           # Check author-specific labels based on PR author
           if [[ "${PR_AUTHOR}" == "srz-zumix" ]]; then
             # Test exact match
-            if [[ "${MATCHED_LABELS}" != *"author-exact"* ]]; then
+            if ! grep -q "author-exact" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-exact should be matched for srz-zumix"
               exit 1
             fi
             # Test regex match
-            if [[ "${MATCHED_LABELS}" != *"author-regex"* ]]; then
+            if ! grep -q "author-regex" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-regex should be matched for srz-zumix"
               exit 1
             fi
             # Test multi author match
-            if [[ "${MATCHED_LABELS}" != *"author-multi"* ]]; then
+            if ! grep -q "author-multi" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-multi should be matched for srz-zumix"
               exit 1
             fi
             # Test any condition match
-            if [[ "${MATCHED_LABELS}" != *"author-any"* ]]; then
+            if ! grep -q "author-any" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-any should be matched for srz-zumix"
               exit 1
             fi
             # Test not-bot match (srz-zumix is not a bot)
-            if [[ "${MATCHED_LABELS}" != *"author-not-bot"* ]]; then
+            if ! grep -q "author-not-bot" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-not-bot should be matched for srz-zumix"
               exit 1
             fi
             # Test bot label should not match
-            if [[ "${MATCHED_LABELS}" == *"author-bot"* ]]; then
+            if grep -q "author-bot" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-bot should NOT be matched for srz-zumix"
               exit 1
             fi
@@ -97,12 +95,12 @@ jobs:
           # Check for bot authors
           if [[ "${PR_AUTHOR}" == *"[bot]" ]]; then
             # Test bot match
-            if [[ "${MATCHED_LABELS}" != *"author-bot"* ]]; then
+            if ! grep -q "author-bot" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-bot should be matched for bot user"
               exit 1
             fi
             # Test not-bot should not match
-            if [[ "${MATCHED_LABELS}" == *"author-not-bot"* ]]; then
+            if grep -q "author-not-bot" "${RUNNER_TEMP}/output.txt"; then
               echo "::error::author-not-bot should NOT be matched for bot user"
               exit 1
             fi
@@ -150,24 +148,22 @@ jobs:
         id: bot-label-kit
         continue-on-error: true
         run: |
-          MATCHED_LABELS=$(go run . labeler \
+          go run . labeler \
             --config ${CONFIGURATION_PATH} \
+            --sync \
             --dryrun \
-            --format json --jq '[ .[].name ] | join(",")' \
-            ${BOT_PR})
-          echo "labels=${MATCHED_LABELS}" | tee -a "${GITHUB_OUTPUT}"
+            ${BOT_PR} 2>&1 | tee ${{ runner.temp }}/bot-output.txt
 
       - name: Test bot author matching
         env:
           BOT_AUTHOR: ${{ steps.bot-pr-author.outputs.author }}
-          MATCHED_LABELS: ${{ steps.bot-label-kit.outputs.labels }}
         if: steps.bot-pr-author.outcome == 'success'
         run: |
           echo "Bot PR Author: ${BOT_AUTHOR}"
-          echo "Matched Labels: ${MATCHED_LABELS}"
+          cat "${RUNNER_TEMP}/bot-output.txt"
 
           if [[ "${BOT_AUTHOR}" == *"[bot]" ]]; then
-            if [[ "${MATCHED_LABELS}" != *"author-bot"* ]]; then
+            if ! grep -q "author-bot" "${RUNNER_TEMP}/bot-output.txt"; then
               echo "::error::author-bot should be matched for bot user ${BOT_AUTHOR}"
               exit 1
             fi
