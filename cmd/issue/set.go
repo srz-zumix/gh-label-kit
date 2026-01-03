@@ -38,7 +38,7 @@ func NewSetCmd() *cobra.Command {
 			ctx := context.Background()
 			result, err := gh.SetIssueLabels(ctx, client, repository, target, labels)
 			if err != nil {
-				return fmt.Errorf("failed to set labels for issue #%s: %w", target, err)
+				return fmt.Errorf("failed to set labels for issue %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

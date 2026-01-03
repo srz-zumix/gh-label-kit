@@ -38,7 +38,7 @@ func NewAddCmd() *cobra.Command {
 			ctx := context.Background()
 			labels, err := gh.AddDiscussionLabels(ctx, client, repository, target, addLabels)
 			if err != nil {
-				return fmt.Errorf("failed to add labels to discussion #%s: %w", target, err)
+				return fmt.Errorf("failed to add labels to discussion %s: %w", target, err)
 			}
 
 			renderer := render.NewRenderer(opts.Exporter)

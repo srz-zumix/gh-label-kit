@@ -30,7 +30,7 @@ func NewClearCmd() *cobra.Command {
 			ctx := context.Background()
 			err = gh.ClearDiscussionLabels(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to clear labels from discussion #%s: %w", target, err)
+				return fmt.Errorf("failed to clear labels from discussion %s: %w", target, err)
 			}
 			logger.Info("All labels removed from discussion", "discussion", target, "repository", parser.GetRepositoryFullName(repository))
 			return nil

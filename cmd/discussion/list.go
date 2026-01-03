@@ -37,7 +37,7 @@ func NewListCmd() *cobra.Command {
 			ctx := context.Background()
 			labels, err := gh.GetDiscussion(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to get discussion #%s: %w", target, err)
+				return fmt.Errorf("failed to get discussion %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

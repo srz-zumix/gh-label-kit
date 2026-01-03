@@ -37,7 +37,7 @@ func NewListCmd() *cobra.Command {
 			ctx := context.Background()
 			issue, err := gh.GetIssue(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to get issue #%s: %w", issue, err)
+				return fmt.Errorf("failed to get issue %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

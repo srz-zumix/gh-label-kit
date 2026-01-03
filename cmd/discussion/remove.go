@@ -38,7 +38,7 @@ func NewRemoveCmd() *cobra.Command {
 			ctx := context.Background()
 			labels, err := gh.RemoveDiscussionLabels(ctx, client, repository, target, labelsToRemove)
 			if err != nil {
-				return fmt.Errorf("failed to remove labels from discussion #%s: %w", target, err)
+				return fmt.Errorf("failed to remove labels from discussion %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

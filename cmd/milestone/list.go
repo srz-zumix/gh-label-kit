@@ -37,7 +37,7 @@ func NewListCmd() *cobra.Command {
 			ctx := context.Background()
 			labels, err := gh.ListLabelsForMilestone(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to list labels for milestone '%s': %w", target, err)
+				return fmt.Errorf("failed to list labels for milestone %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
