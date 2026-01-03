@@ -7,6 +7,8 @@ on:
       - reopened
       - ready_for_review
 
+permissions: {}
+
 env:
   ASIS_AUTHOR_PR: 41
   NO_LABEL_NO_REQUEST_PR: 37

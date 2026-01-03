@@ -1,6 +1,8 @@
 name: "Pull Request Labeler"
 on:
-- pull_request
+  - pull_request
+
+permissions: {}
 
 jobs:
   labeler:
@@ -10,11 +12,11 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/labeler@v6
-      id: labeler
-      with:
-        sync-labels: true
-    - env:
-        ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
-      run: |
-        echo "Labels: ${ALL_LABELS}"
+      - uses: actions/labeler@v6
+        id: labeler
+        with:
+          sync-labels: true
+      - env:
+          ALL_LABELS: ${{ steps.labeler.outputs.all-labels }}
+        run: |
+          echo "Labels: ${ALL_LABELS}"

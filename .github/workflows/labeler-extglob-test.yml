@@ -2,6 +2,8 @@ name: "Labeler extglob Test"
 on:
  pull_request:
 
+permissions: {}
+
 jobs:
   labeler-extglob-test:
     permissions:
