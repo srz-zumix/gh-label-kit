@@ -18,8 +18,8 @@ func NewClearCmd() *cobra.Command {
 		Long:  `Remove all labels from a discussion in the repository.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			discussion := args[0]
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			target := args[0]
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -28,11 +28,11 @@ func NewClearCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			err = gh.ClearDiscussionLabels(ctx, client, repository, discussion)
+			err = gh.ClearDiscussionLabels(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to clear labels from discussion #%s: %w", discussion, err)
+				return fmt.Errorf("failed to clear labels from discussion %s: %w", target, err)
 			}
-			logger.Info("All labels removed from discussion", "discussion", discussion, "repository", parser.GetRepositoryFullName(repository))
+			logger.Info("All labels removed from discussion", "discussion", target, "repository", parser.GetRepositoryFullName(repository))
 			return nil
 		},
 	}

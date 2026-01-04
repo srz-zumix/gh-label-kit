@@ -3,7 +3,6 @@ package milestone
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
 	"github.com/spf13/cobra"
@@ -26,12 +25,8 @@ func NewListCmd() *cobra.Command {
 		Long:  `List all labels attached to issues and PRs in the specified milestone.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			milestone := args[0]
-			milestoneNum, err := strconv.Atoi(milestone)
-			if err != nil || milestoneNum <= 0 {
-				return fmt.Errorf("invalid milestone number: %s", milestone)
-			}
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			target := args[0]
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -40,9 +35,9 @@ func NewListCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			labels, err := gh.ListLabelsForMilestone(ctx, client, repository, milestoneNum)
+			labels, err := gh.ListLabelsForMilestone(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to list labels for milestone '%s': %w", milestone, err)
+				return fmt.Errorf("failed to list labels for milestone %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

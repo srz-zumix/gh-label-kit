@@ -26,8 +26,8 @@ func NewAddCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			addLabels := args[1:]
-			issue := args[0]
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			target := args[0]
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -36,9 +36,9 @@ func NewAddCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			labels, err := gh.AddIssueLabels(ctx, client, repository, issue, addLabels)
+			labels, err := gh.AddIssueLabels(ctx, client, repository, target, addLabels)
 			if err != nil {
-				return fmt.Errorf("failed to add labels to issue #%s: %w", issue, err)
+				return fmt.Errorf("failed to add labels to issue %s: %w", target, err)
 			}
 
 			renderer := render.NewRenderer(opts.Exporter)

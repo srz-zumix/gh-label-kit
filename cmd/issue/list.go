@@ -25,8 +25,8 @@ func NewListCmd() *cobra.Command {
 		Long:  `List all labels attached to a issue in the repository.`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			issueNumber := args[0]
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			target := args[0]
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -35,9 +35,9 @@ func NewListCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			issue, err := gh.GetIssue(ctx, client, repository, issueNumber)
+			issue, err := gh.GetIssue(ctx, client, repository, target)
 			if err != nil {
-				return fmt.Errorf("failed to get issue #%s: %w", issueNumber, err)
+				return fmt.Errorf("failed to get issue %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

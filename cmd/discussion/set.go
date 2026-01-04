@@ -25,9 +25,9 @@ func NewSetCmd() *cobra.Command {
 		Long:  `Set (replace) all labels for a discussion in the repository.`,
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			discussion := args[0]
+			target := args[0]
 			labels := args[1:]
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -36,9 +36,9 @@ func NewSetCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			result, err := gh.SetDiscussionLabels(ctx, client, repository, discussion, labels)
+			result, err := gh.SetDiscussionLabels(ctx, client, repository, target, labels)
 			if err != nil {
-				return fmt.Errorf("failed to set labels for discussion #%s: %w", discussion, err)
+				return fmt.Errorf("failed to set labels for discussion %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)

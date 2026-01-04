@@ -25,9 +25,9 @@ func NewRemoveCmd() *cobra.Command {
 		Long:  `Remove one or more labels from a issue in the repository.`,
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			issue := args[0]
+			target := args[0]
 			labelsToRemove := args[1:]
-			repository, err := parser.Repository(parser.RepositoryInput(repo))
+			repository, err := parser.Repository(parser.RepositoryInput(repo), parser.RepositoryFromURL(target))
 			if err != nil {
 				return fmt.Errorf("failed to resolve repository: %w", err)
 			}
@@ -36,9 +36,9 @@ func NewRemoveCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 			ctx := context.Background()
-			labels, err := gh.RemoveIssueLabels(ctx, client, repository, issue, labelsToRemove)
+			labels, err := gh.RemoveIssueLabels(ctx, client, repository, target, labelsToRemove)
 			if err != nil {
-				return fmt.Errorf("failed to get issue #%s: %w", issue, err)
+				return fmt.Errorf("failed to remove labels from issue %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
