@@ -22,7 +22,7 @@ author-multi:
 # Test author combined with changed-files (all conditions)
 author-with-files:
 - all:
-  - author: 'srz-.*'
+  - author: '.*'
   - changed-files:
     - any-glob-to-any-file: '**'
 
