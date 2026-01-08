@@ -48,6 +48,7 @@ type ChangedFilesRule struct {
 	AnyGlobToAllFiles  StringOrSlice `yaml:"any-glob-to-all-files,omitempty"`
 	AllGlobsToAnyFile  StringOrSlice `yaml:"all-globs-to-any-file,omitempty"`
 	AllGlobsToAllFiles StringOrSlice `yaml:"all-globs-to-all-files,omitempty"`
+	AllFilesToAnyGlob  StringOrSlice `yaml:"all-files-to-any-glob,omitempty"`
 }
 
 type StringOrSliceRaw any

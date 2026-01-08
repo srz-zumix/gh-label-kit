@@ -133,3 +133,25 @@ func TestMatchChangedFilesRule_AllGlobsMatchAllFiles(t *testing.T) {
 		t.Error("not all globs should match all files")
 	}
 }
+
+func TestMatchChangedFilesRule_AllFilesToAnyGlob(t *testing.T) {
+	changedFiles := []*github.CommitFile{
+		{Filename: github.Ptr("foo.txt")},
+		{Filename: github.Ptr("bar.txt")},
+	}
+	// all files match at least one glob pattern
+	cf := ChangedFilesRule{AllFilesToAnyGlob: []string{"*.txt", "*.md"}}
+	if !matchChangedFilesRuleAll(cf, changedFiles) {
+		t.Error("all files should match at least one glob")
+	}
+	// not all files match any glob pattern
+	cf = ChangedFilesRule{AllFilesToAnyGlob: []string{"foo.txt", "*.md"}}
+	if matchChangedFilesRuleAll(cf, changedFiles) {
+		t.Error("bar.txt does not match any glob")
+	}
+	// all files match when using wildcard
+	cf = ChangedFilesRule{AllFilesToAnyGlob: []string{"**"}}
+	if !matchChangedFilesRuleAll(cf, changedFiles) {
+		t.Error("all files should match wildcard")
+	}
+}

@@ -20,6 +20,7 @@ The labeler supports various file matching strategies:
 - **any-glob-to-all-files**: Match if any pattern matches all changed files
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
+- **all-files-to-any-glob**: Match if all changed files match at least one of the provided patterns
 
 ```yaml
 backend:
@@ -28,6 +29,14 @@ backend:
       - "api/**/*"
       - "server/**/*"
       - "**/*.go"
+
+# Ensure all changed files are either source code or documentation
+source-or-docs:
+  - changed-files:
+    - all-files-to-any-glob:
+      - "src/**/*"
+      - "docs/**/*"
+      - "*.md"
 ```
 
 #### Glob Patterns
