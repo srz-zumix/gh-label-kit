@@ -1,0 +1,84 @@
+name: "Labeler All Files to Any Glob Test"
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  all-files-to-any-glob-test:
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CONFIGURATION_PATH: .github/labeler-all-files-to-any-glob-test.yml
+      TEST_PR: 88
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./...
+
+      - name: Label-kit labeler (dryrun)
+        id: label-kit-labeler
+        run: |
+          go run . labeler \
+            --config ${CONFIGURATION_PATH} \
+            --sync \
+            --dryrun \
+            "${TEST_PR}" 2>&1 | tee ${{ runner.temp }}/output.txt
+
+      - name: Test all-files-to-any-glob matching
+        run: |
+          # Test: go-source-only label should NOT match (PR #88 has only YAML/config files)
+          if grep -q "go-source-only" "${RUNNER_TEMP}/output.txt"; then
+            echo "::error::go-source-only should not match - PR contains YAML/config files, not Go files"
+            exit 1
+          else
+            echo "✅ go-source-only label correctly did not match (no Go files)"
+          fi
+
+          # Test: config-files-only label should match (all files are YAML configuration)
+          if grep -q "config-files-only" "${RUNNER_TEMP}/output.txt"; then
+            echo "✅ config-files-only label matched - all files are configuration files"
+          else
+            echo "::error::config-files-only should have matched - all files are configuration files"
+            exit 1
+          fi
+
+          # Test: code-or-docs-only label should match (YAML files are included in code-or-docs)
+          if grep -q "code-or-docs-only" "${RUNNER_TEMP}/output.txt"; then
+            echo "✅ code-or-docs-only label matched - YAML files are included in code/docs category"
+          else
+            echo "::error::code-or-docs-only should have matched - YAML files should be considered code/docs"
+            exit 1
+          fi
+
+          # Test: workflow-files-only label should match (all files are GitHub workflows or related)
+          if grep -q "workflow-files-only" "${RUNNER_TEMP}/output.txt"; then
+            echo "✅ workflow-files-only label matched - all files are workflow-related"
+          else
+            echo "::error::workflow-files-only should have matched - all files are workflow/CI related"
+            exit 1
+          fi
+
+          # Test: core-directories-only label should NOT match (files are in .github/, not core dirs)
+          if grep -q "core-directories-only" "${RUNNER_TEMP}/output.txt"; then
+            echo "::error::core-directories-only should not match - files are in .github/ and root, not core directories"
+            exit 1
+          else
+            echo "✅ core-directories-only label correctly did not match (no files in core directories)"
+          fi
