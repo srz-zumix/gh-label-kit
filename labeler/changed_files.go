@@ -84,6 +84,28 @@ func matchAllGlobsToAllFiles(patterns []string, changedFiles []*github.CommitFil
 	return true
 }
 
+func matchAllFilesToAnyGlob(patterns []string, changedFiles []*github.CommitFile) bool {
+	if len(changedFiles) == 0 {
+		return false
+	}
+	for _, f := range changedFiles {
+		if f.Filename == nil {
+			return false
+		}
+		found := false
+		for _, pattern := range patterns {
+			if matchGlob(pattern, *f.Filename) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 // MatchChangedFilesRule checks if changed files match the given ChangedFilesRule.
 func matchChangedFilesRuleAny(cf ChangedFilesRule, changedFiles []*github.CommitFile) bool {
 	if len(cf.AnyGlobToAnyFile) != 0 {
@@ -103,6 +125,11 @@ func matchChangedFilesRuleAny(cf ChangedFilesRule, changedFiles []*github.Commit
 	}
 	if len(cf.AllGlobsToAllFiles) != 0 {
 		if matchAllGlobsToAllFiles(cf.AllGlobsToAllFiles, changedFiles) {
+			return true
+		}
+	}
+	if len(cf.AllFilesToAnyGlob) != 0 {
+		if matchAllFilesToAnyGlob(cf.AllFilesToAnyGlob, changedFiles) {
 			return true
 		}
 	}
@@ -127,6 +154,11 @@ func matchChangedFilesRuleAll(cf ChangedFilesRule, changedFiles []*github.Commit
 	}
 	if len(cf.AllGlobsToAllFiles) != 0 {
 		if !matchAllGlobsToAllFiles(cf.AllGlobsToAllFiles, changedFiles) {
+			return false
+		}
+	}
+	if len(cf.AllFilesToAnyGlob) != 0 {
+		if !matchAllFilesToAnyGlob(cf.AllFilesToAnyGlob, changedFiles) {
 			return false
 		}
 	}

@@ -1,6 +1,46 @@
 # Labeler Configuration
 
-The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `author`, `color`, `description`, and `codeowners` features.
+The `labeler` command uses a YAML configuration file (default: `.github/labeler.yml`) to define labeling rules. This configuration is compatible with [actions/labeler](https://github.com/actions/labeler) format, with additional support for `author`, `color`, `description`, `codeowners`, and `all-files-to-any-glob` features.
+
+## Compatibility with actions/labeler
+
+gh-label-kit is fully compatible with [actions/labeler](https://github.com/actions/labeler) configuration files. This means you can:
+
+1. **Use the same `.github/labeler.yml` file** for both actions/labeler and gh-label-kit
+2. **Add gh-label-kit specific features** without breaking actions/labeler compatibility
+
+When actions/labeler encounters gh-label-kit specific fields (like `author`, `color`, `description`, `codeowners`, or `all-files-to-any-glob`), it simply ignores them. This allows you to enhance your configuration for gh-label-kit without creating separate configuration files.
+
+### Example: Shared Configuration
+
+```yaml
+# This configuration works with both actions/labeler and gh-label-kit
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: 'docs/**'
+  - color: "0075ca"  # gh-label-kit only
+  - description: "Documentation changes"  # gh-label-kit only
+
+# gh-label-kit specific: all changed files must be source code
+source-only:
+  - all-files-to-any-glob:  # gh-label-kit only, ignored by actions/labeler
+    - "src/**/*"
+    - "*.go"
+  - color: "28a745"
+
+# gh-label-kit specific: match by author
+bot-dependency-updates:
+  - author: 'dependabot\[bot\]'  # gh-label-kit only, ignored by actions/labeler
+  - changed-files:
+    - any-glob-to-any-file: 'go.mod'
+```
+
+In the above example:
+
+- **actions/labeler** will recognize and process the `changed-files` rules for all labels
+- **gh-label-kit** will additionally process the `author`, `color`, `description`, and `all-files-to-any-glob` fields
+- The configuration file remains valid for both tools
 
 ## Basic Structure
 
@@ -20,6 +60,7 @@ The labeler supports various file matching strategies:
 - **any-glob-to-all-files**: Match if any pattern matches all changed files
 - **all-globs-to-any-file**: Match if all patterns match at least one changed file
 - **all-globs-to-all-files**: Match if all patterns match all changed files
+- **all-files-to-any-glob**: Match if all changed files match at least one of the provided patterns
 
 ```yaml
 backend:
@@ -28,6 +69,26 @@ backend:
       - "api/**/*"
       - "server/**/*"
       - "**/*.go"
+
+# Ensure all changed files are either source code or documentation
+source-or-docs:
+  - changed-files:
+    - all-files-to-any-glob:
+      - "src/**/*"
+      - "docs/**/*"
+      - "*.md"
+```
+
+You can also use `all-files-to-any-glob` at the top level (same level as `color` and `description`) for cleaner configuration:
+
+```yaml
+# All changed files must be within specific directories
+core-files-only:
+  - all-files-to-any-glob:
+    - "src/**/*"
+    - "core/**/*"
+  - color: "0366d6"  # Blue
+  - description: "Changes to core files"
 ```
 
 #### Glob Patterns
@@ -255,6 +316,14 @@ config-change:
       - ".github/**/*"
   - color: "fef2c0"  # Light yellow
   - description: "Configuration file changes"
+
+# All changed files must be source code (no tests, no docs)
+source-files-only:
+  - all-files-to-any-glob:
+    - "src/**/*.go"
+    - "lib/**/*.go"
+  - color: "fbca04"  # Yellow
+  - description: "Source code changes only"
 ```
 
 ### Team-based Labeling with CODEOWNERS
@@ -284,4 +353,5 @@ This ensures that only relevant labels based on the current configuration are ap
 ## Notes
 
 - Glob patterns follow standard glob syntax
-- The configuration is fully compatible with [actions/labeler](https://github.com/actions/labeler) with extensions for color and codeowners support
+- The configuration is fully compatible with [actions/labeler](https://github.com/actions/labeler)
+- gh-label-kit specific features (`author`, `color`, `description`, `codeowners`, `all-files-to-any-glob` at top-level) are safely ignored by actions/labeler, allowing you to use a single configuration file for both tools
