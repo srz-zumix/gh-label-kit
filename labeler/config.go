@@ -25,15 +25,16 @@ type labelerYamlConfig map[string][]labelerYamlMatch
 
 // LabelerMatch supports per-label color key (actions/labeler v5 style)
 type labelerYamlMatch struct {
-	Any          []LabelerRule      `yaml:"any,omitempty"`
-	All          []LabelerRule      `yaml:"all,omitempty"`
-	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
-	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
-	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
-	Author       StringOrSliceRaw   `yaml:"author,omitempty"`
-	Color        string             `yaml:"color,omitempty"`
-	Description  string             `yaml:"description,omitempty"`
-	Codeowners   StringOrSlice      `yaml:"codeowners,omitempty"`
+	Any                []LabelerRule      `yaml:"any,omitempty"`
+	All                []LabelerRule      `yaml:"all,omitempty"`
+	ChangedFiles       []ChangedFilesRule `yaml:"changed-files,omitempty"`
+	AllFilesToAnyGlob  StringOrSlice      `yaml:"all-files-to-any-glob,omitempty"`
+	BaseBranch         StringOrSliceRaw   `yaml:"base-branch,omitempty"`
+	HeadBranch         StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Author             StringOrSliceRaw   `yaml:"author,omitempty"`
+	Color              string             `yaml:"color,omitempty"`
+	Description        string             `yaml:"description,omitempty"`
+	Codeowners         StringOrSlice      `yaml:"codeowners,omitempty"`
 }
 
 type LabelerRule struct {
@@ -179,6 +180,14 @@ func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 }
 
 func (m *labelerYamlMatch) Normalize() {
+	// Integrate top-level all-files-to-any-glob into changed-files
+	if len(m.AllFilesToAnyGlob) > 0 {
+		m.ChangedFiles = append(m.ChangedFiles, ChangedFilesRule{
+			AllFilesToAnyGlob: m.AllFilesToAnyGlob,
+		})
+		m.AllFilesToAnyGlob = nil // Clear to avoid duplication
+	}
+
 	anyRules := make([]LabelerRule, 0)
 	if m.BaseBranch != nil {
 		anyRules = append(anyRules, LabelerRule{BaseBranch: m.GetBaseBranch()})
