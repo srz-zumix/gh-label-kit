@@ -1,0 +1,62 @@
+# Test configuration for all-files-to-any-glob functionality
+# This configuration tests various scenarios where all changed files must match at least one pattern
+# Testing against PR #88 which contains: .github/workflows/labeler-codeowners-test.yml, .github/workflows/zizmor.yml, zizmor.yml
+
+# Test: All files must be Go source files (should NOT match PR #88)
+go-source-only:
+  - all-files-to-any-glob:
+    - "**/*.go"
+    - "go.mod"
+    - "go.sum"
+  - color: "00ff00"
+  - description: "All changed files are Go source files"
+
+# Test: All files must be either code or documentation (should match PR #88 - YAML files considered code)
+code-or-docs-only:
+  - all-files-to-any-glob:
+    - "**/*.go"
+    - "go.mod"
+    - "go.sum"
+    - "**/*.md"
+    - "docs/**"
+    - ".github/**/*.yml"
+    - ".github/**/*.yaml"
+    - "**/*.json"
+    - "**/*.yml"
+    - "**/*.yaml"
+  - color: "0366d6"
+  - description: "All changed files are either code or documentation"
+
+# Test: All files must be workflow-related (should match PR #88)
+workflow-files-only:
+  - all-files-to-any-glob:
+    - ".github/workflows/**"
+    - "*.yml"
+    - "*.yaml"
+    - ".github/**/*.yml"
+    - ".github/**/*.yaml"
+  - color: "28a745"
+  - description: "All changed files are workflow or CI related"
+
+# Test: All files must be in core directories (should NOT match PR #88)
+core-directories-only:
+  - all-files-to-any-glob:
+    - "src/**"
+    - "lib/**"
+    - "core/**"
+    - "internal/**"
+    - "labeler/**"
+  - color: "fbca04"
+  - description: "All changed files are in core directories"
+
+# Test: All files must be configuration files (should match PR #88)
+config-files-only:
+  - all-files-to-any-glob:
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.json"
+    - "**/*.toml"
+    - ".github/**"
+    - "config/**"
+  - color: "fef2c0"
+  - description: "All changed files are configuration files"
