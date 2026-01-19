@@ -5,9 +5,6 @@ ci:
     - all-files-to-any-glob:
       - '.github/**'
       - 'zizmor.yml'
-  - all-files-to-any-glob:
-    - '.github/**'
-    - 'zizmor.yml'
   - color: '#7c0bb2'
 
 labeler:
