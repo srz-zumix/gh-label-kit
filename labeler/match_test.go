@@ -72,6 +72,13 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 				{Any: []LabelerRule{{BaseBranch: []any{"base-branch"}}}},
 			},
 		},
+		"label3": LabelerLabelConfig{
+			Matcher: []LabelerMatch{
+				{Any: []LabelerRule{{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}}}},
+				{Any: []LabelerRule{{HeadBranch: []any{"head-branch"}}}},
+				{Any: []LabelerRule{{BaseBranch: []any{"regexp"}}}},
+			},
+		},
 	}
 	pr := &github.PullRequest{
 		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
@@ -86,6 +93,39 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 	}
 	if !result.IsMatched("label2") {
 		t.Errorf("label2 should be matched")
+	}
+	if result.IsMatched("label3") {
+		t.Errorf("label3 should not be matched")
+	}
+}
+
+func TestCheckMatchConfigs_AllFilesToAnyGlob(t *testing.T) {
+	cfg := LabelerConfig{
+		"label1": LabelerLabelConfig{
+			Matcher: []LabelerMatch{
+				{Any: []LabelerRule{
+					{ChangedFiles: []ChangedFilesRule{{AnyGlobToAnyFile: []string{"glob"}}}},
+					{ChangedFiles: []ChangedFilesRule{{AllFilesToAnyGlob: []string{
+						".github/**",
+						"*.yml",
+					}}}},
+				}},
+			},
+		},
+	}
+	pr := &github.PullRequest{
+		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
+		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
+		Labels: []*github.Label{},
+	}
+	files := []*github.CommitFile{
+		{Filename: github.Ptr(".github/workflows/test.yml")},
+		{Filename: github.Ptr("zizmor.yml")},
+	}
+	matcher := NewMatcher(context.TODO(), nil)
+	result := matcher.CheckMatchConfigs(cfg, files, pr)
+	if !result.IsMatched("label1") {
+		t.Errorf("label1 should be matched")
 	}
 }
 

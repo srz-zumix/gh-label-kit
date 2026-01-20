@@ -38,10 +38,11 @@ type labelerYamlMatch struct {
 }
 
 type LabelerRule struct {
-	ChangedFiles []ChangedFilesRule `yaml:"changed-files,omitempty"`
-	BaseBranch   StringOrSliceRaw   `yaml:"base-branch,omitempty"`
-	HeadBranch   StringOrSliceRaw   `yaml:"head-branch,omitempty"`
-	Author       StringOrSliceRaw   `yaml:"author,omitempty"`
+	ChangedFiles      []ChangedFilesRule `yaml:"changed-files,omitempty"`
+	AllFilesToAnyGlob StringOrSlice      `yaml:"all-files-to-any-glob,omitempty"`
+	BaseBranch        StringOrSliceRaw   `yaml:"base-branch,omitempty"`
+	HeadBranch        StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Author            StringOrSliceRaw   `yaml:"author,omitempty"`
 }
 
 type ChangedFilesRule struct {
@@ -179,6 +180,16 @@ func (r *labelerYamlConfig) GetConfig() LabelerConfig {
 	return cfg
 }
 
+func (r *LabelerRule) Normalize() {
+	// Integrate top-level all-files-to-any-glob into changed-files
+	if len(r.AllFilesToAnyGlob) > 0 {
+		r.ChangedFiles = append(r.ChangedFiles, ChangedFilesRule{
+			AllFilesToAnyGlob: r.AllFilesToAnyGlob,
+		})
+		r.AllFilesToAnyGlob = nil // Clear to avoid duplication
+	}
+}
+
 func (m *labelerYamlMatch) Normalize() {
 	// Integrate top-level all-files-to-any-glob into changed-files
 	if len(m.AllFilesToAnyGlob) > 0 {
@@ -212,5 +223,12 @@ func (m *labelerYamlMatch) Normalize() {
 		} else {
 			m.Any = append(m.Any, anyRules...)
 		}
+	}
+
+	for i := range m.Any {
+		m.Any[i].Normalize()
+	}
+	for i := range m.All {
+		m.All[i].Normalize()
 	}
 }

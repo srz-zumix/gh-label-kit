@@ -284,3 +284,103 @@ ci:
 		t.Errorf("ci description = %q, want %q", lc.Description, "CI/CD pipeline")
 	}
 }
+
+func TestLoadConfig_MixedMatchersWithColor(t *testing.T) {
+	// Test case: changed-files with all-files-to-any-glob and color in a single label
+	// These should create two separate matchers with Any conditions
+	yamlContent := `
+ci:
+  - any:
+    - changed-files:
+      - any-glob-to-all-files: '.github/**'
+  - all-files-to-any-glob:
+    - '.github/**'
+    - 'zizmor.yml'
+  - color: '#7c0bb2'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 1 label, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	// Should create two separate matchers, each with Any rules
+	if len(lc.Matcher) != 2 {
+		t.Errorf("expected 2 matchers for ci, got %d", len(lc.Matcher))
+	}
+	if lc.Color != "#7c0bb2" {
+		t.Errorf("ci color = %q, want %q", lc.Color, "#7c0bb2")
+	}
+	// Verify both matchers have Any rules
+	for i, matcher := range lc.Matcher {
+		if len(matcher.Any) == 0 {
+			t.Errorf("matcher %d: expected at least 1 Any rule, got %d", i, len(matcher.Any))
+		}
+		if len(matcher.All) != 0 {
+			t.Errorf("matcher %d: expected no All rules, got %d", i, len(matcher.All))
+		}
+	}
+}
+
+func TestLoadConfig_MixedMatchersUnderAny(t *testing.T) {
+	// Test case: both changed-files and all-files-to-any-glob under any condition
+	// These should be merged into a single matcher with one Any rule containing both conditions
+	yamlContent := `
+ci:
+  - any:
+    - changed-files:
+      - any-glob-to-all-files: '.github/**'
+    - all-files-to-any-glob:
+      - '.github/**'
+      - 'zizmor.yml'
+  - color: '#7c0bb2'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 1 label, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	// Should create one matcher with one Any rule containing both conditions
+	if len(lc.Matcher) != 1 {
+		t.Errorf("expected 1 matcher for ci, got %d", len(lc.Matcher))
+	}
+	if lc.Color != "#7c0bb2" {
+		t.Errorf("ci color = %q, want %q", lc.Color, "#7c0bb2")
+	}
+	if len(lc.Matcher) > 0 {
+		matcher := lc.Matcher[0]
+		if len(matcher.Any) != 2 {
+			t.Errorf("expected 2 Any rules, got %d", len(matcher.Any))
+		}
+		if len(matcher.All) != 0 {
+			t.Errorf("expected no All rules, got %d", len(matcher.All))
+		}
+		// The Any rule should contain both changed-files and all-files-to-any-glob conditions
+		for _, anyRule := range matcher.Any {
+			hasChangedFiles := len(anyRule.ChangedFiles) > 0
+			hasAllFilesToAnyGlob := len(anyRule.AllFilesToAnyGlob) > 0
+
+			if !hasChangedFiles {
+				t.Error("Any rule should contain changed-files condition")
+			}
+			if hasAllFilesToAnyGlob {
+				t.Error("Any rule should contain all-files-to-any-glob condition")
+			}
+		}
+
+		if len(matcher.Any[1].ChangedFiles[0].AllFilesToAnyGlob) == 0 {
+			t.Error("Second Any rule should contain all-files-to-any-glob condition")
+		}
+	}
+}
