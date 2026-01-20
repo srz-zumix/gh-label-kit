@@ -361,7 +361,7 @@ ci:
 	if len(lc.Matcher) > 0 {
 		matcher := lc.Matcher[0]
 		if len(matcher.Any) != 2 {
-			t.Errorf("expected 2 Any rule, got %d", len(matcher.Any))
+			t.Errorf("expected 2 Any rules, got %d", len(matcher.Any))
 		}
 		if len(matcher.All) != 0 {
 			t.Errorf("expected no All rules, got %d", len(matcher.All))
