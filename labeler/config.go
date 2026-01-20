@@ -38,11 +38,11 @@ type labelerYamlMatch struct {
 }
 
 type LabelerRule struct {
-	ChangedFiles 		[]ChangedFilesRule `yaml:"changed-files,omitempty"`
-	AllFilesToAnyGlob  	StringOrSlice      `yaml:"all-files-to-any-glob,omitempty"`
-	BaseBranch   		StringOrSliceRaw   `yaml:"base-branch,omitempty"`
-	HeadBranch   		StringOrSliceRaw   `yaml:"head-branch,omitempty"`
-	Author       		StringOrSliceRaw   `yaml:"author,omitempty"`
+	ChangedFiles      []ChangedFilesRule `yaml:"changed-files,omitempty"`
+	AllFilesToAnyGlob StringOrSlice      `yaml:"all-files-to-any-glob,omitempty"`
+	BaseBranch        StringOrSliceRaw   `yaml:"base-branch,omitempty"`
+	HeadBranch        StringOrSliceRaw   `yaml:"head-branch,omitempty"`
+	Author            StringOrSliceRaw   `yaml:"author,omitempty"`
 }
 
 type ChangedFilesRule struct {
