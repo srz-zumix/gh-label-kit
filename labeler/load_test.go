@@ -284,3 +284,52 @@ ci:
 		t.Errorf("ci description = %q, want %q", lc.Description, "CI/CD pipeline")
 	}
 }
+
+func TestLoadConfig_MixedMatchersWithColor(t *testing.T) {
+	// Test case: changed-files with all-files-to-any-glob and color in a single label
+	// These should be merged into a single matcher, not create separate matchers
+	yamlContent := `
+ci:
+  - any:
+    - changed-files:
+      - any-glob-to-all-files: '.github/**'
+  - all-files-to-any-glob:
+    - '.github/**'
+    - 'zizmor.yml'
+  - color: '#7c0bb2'
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	if err != nil {
+		t.Fatalf("LoadConfig error: %v", err)
+	}
+	if len(cfg) != 1 {
+		t.Errorf("expected 1 label, got %d", len(cfg))
+	}
+	lc, ok := cfg["ci"]
+	if !ok {
+		t.Errorf("ci not loaded")
+	}
+	// Both changed-files and all-files-to-any-glob should be in the same matcher
+	if len(lc.Matcher) != 1 {
+		t.Errorf("expected 1 matcher for ci, got %d", len(lc.Matcher))
+	}
+	if lc.Color != "#7c0bb2" {
+		t.Errorf("ci color = %q, want %q", lc.Color, "#7c0bb2")
+	}
+	if len(lc.Matcher) > 0 {
+		matcher := lc.Matcher[0]
+		// The normalized matcher should have merged all conditions
+		// It can have multiple Any rules if they came from different fields
+		if len(matcher.Any) == 0 {
+			t.Errorf("expected at least 1 Any rule, got %d", len(matcher.Any))
+		}
+		// Find the ChangedFiles rule
+		var totalChangedFiles int
+		for _, rule := range matcher.Any {
+			totalChangedFiles += len(rule.ChangedFiles)
+		}
+		if totalChangedFiles != 2 {
+			t.Errorf("expected 2 changed-files rules total, got %d", totalChangedFiles)
+		}
+	}
+}
