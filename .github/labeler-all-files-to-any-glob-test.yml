@@ -4,10 +4,11 @@
 
 # Test: All files must be Go source files (should NOT match PR #88)
 go-source-only:
-  - all-files-to-any-glob:
-    - "**/*.go"
-    - "go.mod"
-    - "go.sum"
+  - any:
+    - all-files-to-any-glob:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
   - color: "00ff00"
   - description: "All changed files are Go source files"
 
