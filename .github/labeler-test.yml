@@ -3,7 +3,8 @@ ci:
   - changed-files:
     - any-glob-to-all-files: '.github/**'
   - all-files-to-any-glob:
-    - '.github/**'
+    - '.github/**'    
+    - 'zizmor.yml'
     - 'zizmor.yaml'
 - color: '#7c0bb2'
 - description: 'Continuous Integration'
