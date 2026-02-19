@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 // Matcher handles all matching logic for labeler config rules
@@ -132,6 +133,7 @@ func (r MatchResult) DeleteTo() []string {
 
 // CheckMatchConfigs checks all label configs against the PR and returns matched/unmatched labels
 func (m *Matcher) CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr *github.PullRequest) MatchResult {
+	logger.Debug("Starting label matching", "pr", pr.GetNumber(), "changedFiles", len(changedFiles), "configLabels", len(cfg))
 	result := MatchResult{
 		Current:   []string{},
 		Matched:   []string{},
@@ -144,21 +146,27 @@ func (m *Matcher) CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.Co
 
 	for label, labelConfig := range cfg {
 		matched := len(labelConfig.Matcher) != 0
-		for _, match := range labelConfig.Matcher {
-			if !m.matchLabelerMatch(match, changedFiles, pr) {
+		logger.Debug("Checking label config", "label", label, "matcherCount", len(labelConfig.Matcher))
+		for i, match := range labelConfig.Matcher {
+			isMatch := m.matchLabelerMatch(match, changedFiles, pr)
+			logger.Debug("Matcher result", "label", label, "matcherIndex", i, "matched", isMatch)
+			if !isMatch {
 				matched = false
 				break
 			}
 		}
 		if matched {
+			logger.Debug("Label matched", "label", label)
 			result.Matched = append(result.Matched, label)
 		} else {
+			logger.Debug("Label unmatched", "label", label)
 			result.Unmatched = append(result.Unmatched, label)
 		}
 	}
 	slices.Sort(result.Current)
 	slices.Sort(result.Matched)
 	slices.Sort(result.Unmatched)
+	logger.Debug("Label matching completed", "pr", pr.GetNumber(), "current", result.Current, "matched", result.Matched, "unmatched", result.Unmatched)
 	return result
 }
 
@@ -198,48 +206,58 @@ func (m *Matcher) matchLabelerMatchAll(rules []LabelerRule, changedFiles []*gith
 func (m *Matcher) matchLabelerRuleAny(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
 	if r.BaseBranch != nil {
 		if matchLabelerRuleBaseBranch(r, pr) {
+			logger.Debug("BaseBranch rule matched (any)", "pr", pr.GetNumber(), "baseBranch", pr.Base.GetRef())
 			return true
 		}
 	}
 	if r.HeadBranch != nil {
 		if matchLabelerRuleHeadBranch(r, pr) {
+			logger.Debug("HeadBranch rule matched (any)", "pr", pr.GetNumber(), "headBranch", pr.Head.GetRef())
 			return true
 		}
 	}
 	if r.Author != nil {
 		if m.matchLabelerRuleAuthor(r, pr) {
+			logger.Debug("Author rule matched (any)", "pr", pr.GetNumber(), "author", pr.GetUser().GetLogin())
 			return true
 		}
 	}
 	if len(r.ChangedFiles) > 0 {
 		if matchChangedFilesAny(r.ChangedFiles, changedFiles) {
+			logger.Debug("ChangedFiles rule matched (any)", "pr", pr.GetNumber(), "changedFilesCount", len(changedFiles))
 			return true
 		}
 	}
+	logger.Debug("No rules matched (any)", "pr", pr.GetNumber())
 	return false
 }
 
 func (m *Matcher) matchLabelerRuleAll(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
 	if r.BaseBranch != nil {
 		if !matchLabelerRuleBaseBranch(r, pr) {
+			logger.Debug("BaseBranch rule not matched (all)", "pr", pr.GetNumber(), "baseBranch", pr.Base.GetRef())
 			return false
 		}
 	}
 	if r.HeadBranch != nil {
 		if !matchLabelerRuleHeadBranch(r, pr) {
+			logger.Debug("HeadBranch rule not matched (all)", "pr", pr.GetNumber(), "headBranch", pr.Head.GetRef())
 			return false
 		}
 	}
 	if r.Author != nil {
 		if !m.matchLabelerRuleAuthor(r, pr) {
+			logger.Debug("Author rule not matched (all)", "pr", pr.GetNumber(), "author", pr.GetUser().GetLogin())
 			return false
 		}
 	}
 	if len(r.ChangedFiles) > 0 {
 		if !matchChangedFilesAll(r.ChangedFiles, changedFiles) {
+			logger.Debug("ChangedFiles rule not matched (all)", "pr", pr.GetNumber(), "changedFilesCount", len(changedFiles))
 			return false
 		}
 	}
+	logger.Debug("All rules matched (all)", "pr", pr.GetNumber())
 	return true
 }
 

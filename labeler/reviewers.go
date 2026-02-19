@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/actions"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 const (
@@ -33,15 +34,22 @@ var ReviewersRequestModes = []string{
 }
 
 func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResult, reviewRequestMode string, syncLabels bool) []string {
+	logger.Debug("Getting review request target labels", "pr", pr.GetNumber(), "mode", reviewRequestMode, "syncLabels", syncLabels)
 	switch reviewRequestMode {
 	case ReviewRequestModeNone, ReviewRequestModeNever:
+		logger.Debug("Review request mode is none/never", "mode", reviewRequestMode)
 		return nil
 	case ReviewRequestModeAddTo:
-		return matchResult.AddTo()
+		labels := matchResult.AddTo()
+		logger.Debug("Review request mode addto", "labels", labels)
+		return labels
 	case ReviewRequestModeAlways:
-		return matchResult.GetLabels(syncLabels)
+		labels := matchResult.GetLabels(syncLabels)
+		logger.Debug("Review request mode always", "labels", labels)
+		return labels
 	case ReviewRequestModeReadyForReview:
 		if pr.GetDraft() {
+			logger.Debug("PR is draft, skipping review request", "pr", pr.GetNumber())
 			return nil
 		}
 		if actions.IsRunsOn() {
@@ -50,16 +58,19 @@ func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResul
 				return nil
 			}
 			if eventContext.Action == "ready_for_review" {
+				logger.Debug("Event action is ready_for_review, using always mode", "pr", pr.GetNumber())
 				return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAlways, syncLabels)
 			}
 		}
 		return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAddTo, syncLabels)
 	case ReviewRequestModeAlwaysReviewable:
 		if pr.GetDraft() {
+			logger.Debug("PR is draft, skipping review request", "pr", pr.GetNumber())
 			return nil
 		}
 		return GetReviewRequestTargetLabels(pr, matchResult, ReviewRequestModeAlways, syncLabels)
 	default:
+		logger.Debug("Unknown review request mode", "mode", reviewRequestMode)
 		return nil
 	}
 }
@@ -130,39 +141,55 @@ func (c *LabeledCodeOwners) ExpandCodeownersSet(ownerSet map[string]struct{}) ma
 }
 
 func (c *LabeledCodeOwners) GetReviewers(labels []string) []string {
+	logger.Debug("Getting reviewers from labels", "labelsCount", len(labels))
 	if len(labels) == 0 {
 		return []string{}
 	}
 	if c.pr.GetState() != "open" {
+		logger.Debug("PR is not open, skipping reviewers", "pr", c.pr.GetNumber(), "state", c.pr.GetState())
 		return []string{}
 	}
 
 	codeowners := CollectCodeownersSet(labels, c.cfg)
+	logger.Debug("Collected codeowners", "count", len(codeowners))
 	codeowners = c.ExpandCodeownersSet(codeowners)
+	logger.Debug("Expanded codeowners", "count", len(codeowners))
 	author := c.pr.GetUser().GetLogin()
 	delete(codeowners, author)
+	logger.Debug("Removed PR author from codeowners", "author", author)
 	reviewers, err := gh.ListPullRequestReviewers(c.ctx, c.g, c.repo, c.pr)
 	if err == nil {
 		for _, r := range reviewers.Users {
 			delete(codeowners, r.GetLogin())
 		}
+		logger.Debug("Removed existing reviewers", "reviewersCount", len(reviewers.Users))
 	}
 	reviewed_reviewers, err := gh.GetPullRequestLatestReviews(c.ctx, c.g, c.repo, c.pr)
 	if err == nil {
+		removedCount := 0
 		for _, r := range reviewed_reviewers {
 			if r.GetCommitID() == c.pr.GetHead().GetSHA() {
 				delete(codeowners, r.GetUser().GetLogin())
+				removedCount++
 			}
 		}
+		logger.Debug("Removed reviewers who already reviewed latest commit", "removedCount", removedCount)
 	}
-	return slices.Collect(maps.Keys(codeowners))
+	result := slices.Collect(maps.Keys(codeowners))
+	logger.Debug("Final reviewers list", "reviewers", result)
+	return result
 }
 
 func (c *LabeledCodeOwners) SetReviewers(labels []string) ([]string, *github.PullRequest, error) {
 	codeowners := c.GetReviewers(labels)
 	if len(codeowners) == 0 {
+		logger.Debug("No reviewers to request", "pr", c.pr.GetNumber())
 		return nil, c.pr, nil
 	}
+	logger.Debug("Requesting reviewers for PR", "pr", c.pr.GetNumber(), "reviewers", codeowners)
 	pr, err := gh.RequestPullRequestReviewers(c.ctx, c.g, c.repo, c.pr, gh.GetRequestedReviewers(codeowners))
+	if err != nil {
+		logger.Debug("Failed to request reviewers", "pr", c.pr.GetNumber(), "error", err)
+	}
 	return codeowners, pr, err
 }
