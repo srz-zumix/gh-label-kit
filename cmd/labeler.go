@@ -33,6 +33,7 @@ func NewLabelerCmd() *cobra.Command {
 	var dryrun bool
 	var ref string
 	var reviewRequest string
+	var skipLocalConfig bool
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
@@ -50,8 +51,12 @@ func NewLabelerCmd() *cobra.Command {
 				return fmt.Errorf("error creating GitHub client: %w", err)
 			}
 
-			cfg, err := labeler.LoadConfig(configPath)
-			if err != nil {
+			var cfg labeler.LabelerConfig
+			if !skipLocalConfig {
+				cfg, err = labeler.LoadConfig(configPath)
+			}
+			// Load config from repository if local config is skipped or failed to load
+			if skipLocalConfig || err != nil {
 				if ref == "" {
 					ref = os.Getenv("GITHUB_SHA")
 				}
@@ -62,6 +67,15 @@ func NewLabelerCmd() *cobra.Command {
 				if contentPaths.Ref == nil {
 					if contentPaths.Repo == nil {
 						contentPaths.Ref = &ref
+						// If ref is still empty and only one PR is specified, use PR's head branch
+						if ref == "" && len(args) == 1 {
+							pr, err := gh.GetPullRequest(ctx, client, repository, args[0])
+							if err != nil {
+								return fmt.Errorf("failed to get PR %s to resolve ref: %w", args[0], err)
+							}
+							ref = pr.GetHead().GetRef()
+							logger.Info("Using PR head branch as ref", "pr", args[0], "ref", ref)
+						}
 					}
 				}
 				if contentPaths.Repo == nil {
@@ -70,6 +84,7 @@ func NewLabelerCmd() *cobra.Command {
 				if contentPaths.Path == nil {
 					contentPaths.Path = &defaultConfigPath
 				}
+
 				cfg, err = labeler.LoadConfigFromRepo(ctx, client, *contentPaths.Repo, *contentPaths.Path, contentPaths.Ref)
 				if err != nil {
 					return fmt.Errorf("failed to load config from repository: %w", err)
@@ -155,6 +170,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVar(&syncLabels, "sync", false, "Remove labels not matching any condition")
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
+	f.BoolVar(&skipLocalConfig, "skip-local-config", false, "Skip loading config from local file and load from repository instead")
 	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Control review request behavior based on CODEOWNERS when labels are applied")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
