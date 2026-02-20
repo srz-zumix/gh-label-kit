@@ -1,6 +1,7 @@
 package labeler
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -19,7 +20,7 @@ label-c:
   - changed-files:
     - any-glob-to-any-file: "*.txt"
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -53,7 +54,7 @@ label-b:
       - changed-files:
           - any-glob-to-any-file: "*.md"
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -69,7 +70,7 @@ label-b:
 }
 
 func TestLoadConfig_FileNotFound(t *testing.T) {
-	_, err := LoadConfig("/no/such/file.yml")
+	_, err := LoadConfig("/no/such/file.yml", false)
 	if err == nil {
 		t.Error("expected error for missing file, got nil")
 	}
@@ -90,7 +91,7 @@ test:
     - head-branch:
       - *ignore_ci
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -135,7 +136,7 @@ documentation:
           - README.md
   - color: '#abcdef'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -168,7 +169,7 @@ func TestLoadConfig_ColorOnly(t *testing.T) {
 ci:
   - color: '#7c0bb2'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -194,7 +195,7 @@ backend:
       - backend/owner1
       - backend/owner2
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -233,7 +234,7 @@ documentation:
   - color: '#abcdef'
   - description: 'Documentation updates'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -266,7 +267,7 @@ func TestLoadConfig_DescriptionOnly(t *testing.T) {
 ci:
   - description: 'CI/CD pipeline'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -298,7 +299,7 @@ ci:
     - 'zizmor.yml'
   - color: '#7c0bb2'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -340,7 +341,7 @@ ci:
       - 'zizmor.yml'
   - color: '#7c0bb2'
 `
-	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent))
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
 	if err != nil {
 		t.Fatalf("LoadConfig error: %v", err)
 	}
@@ -382,5 +383,114 @@ ci:
 		if len(matcher.Any[1].ChangedFiles[0].AllFilesToAnyGlob) == 0 {
 			t.Error("Second Any rule should contain all-files-to-any-glob condition")
 		}
+	}
+}
+
+func TestLoadConfig_UnknownFields(t *testing.T) {
+	// Test that unknown fields trigger a warning but don't cause an error
+	yamlContent := `
+label-a:
+  - changed-files:
+      - any-glob-to-any-file: "*.go"
+  - unknown-field: "some value"
+  - another-unknown: 123
+label-b:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: "*.md"
+      - invalid-key: "value"
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), false)
+	if err != nil {
+		t.Fatalf("LoadConfig should not error on unknown fields, got: %v", err)
+	}
+	if len(cfg) != 2 {
+		t.Errorf("expected 2 labels, got %d", len(cfg))
+	}
+	// Verify that known fields are still parsed correctly
+	lc, ok := cfg["label-a"]
+	if !ok {
+		t.Error("label-a not found in config")
+	}
+	if len(lc.Matcher) != 1 {
+		t.Errorf("label-a should have 1 matcher, got %d", len(lc.Matcher))
+	}
+	lc2, ok := cfg["label-b"]
+	if !ok {
+		t.Error("label-b not found in config")
+	}
+	if len(lc2.Matcher) != 1 {
+		t.Errorf("label-b should have 1 matcher, got %d", len(lc2.Matcher))
+	}
+}
+
+func TestLoadConfig_UnknownFieldsStrictMode(t *testing.T) {
+	// Test that unknown fields cause an error in strict mode
+	yamlContent := `
+label-a:
+  - changed-files:
+      - any-glob-to-any-file: "*.go"
+  - unknown-field: "some value"
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), true)
+	if err == nil {
+		t.Fatal("LoadConfig should error on unknown fields in strict mode, got nil")
+	}
+	if !strings.Contains(err.Error(), "config validation failed") {
+		t.Errorf("expected 'config validation failed' error, got: %v", err)
+	}
+	if cfg != nil {
+		t.Errorf("expected nil config on error, got %d labels", len(cfg))
+	}
+}
+
+func TestLoadConfig_ValidConfigStrictMode(t *testing.T) {
+	// Test that valid config works fine in strict mode
+	yamlContent := `
+label-a:
+  - changed-files:
+      - any-glob-to-any-file: "*.go"
+  - color: '#123456'
+label-b:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file: "*.md"
+`
+	cfg, err := LoadConfigFromReader(strings.NewReader(yamlContent), true)
+	if err != nil {
+		t.Fatalf("LoadConfig should not error on valid config in strict mode, got: %v", err)
+	}
+	if len(cfg) != 2 {
+		t.Errorf("expected 2 labels, got %d", len(cfg))
+	}
+	lc, ok := cfg["label-a"]
+	if !ok {
+		t.Error("label-a not found in config")
+	}
+	if len(lc.Matcher) != 1 {
+		t.Errorf("label-a should have 1 matcher, got %d", len(lc.Matcher))
+	}
+	if lc.Color != "#123456" {
+		t.Errorf("label-a color = %q, want %q", lc.Color, "#123456")
+	}
+}
+
+func TestConfigFileExists(t *testing.T) {
+	// Create a temp file to test with
+	dir := t.TempDir()
+	tmpFile, err := os.CreateTemp(dir, "config-*.yml")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Test existing file
+	if !ConfigFileExists(tmpFile.Name()) {
+		t.Errorf("%s should exist", tmpFile.Name())
+	}
+
+	// Test non-existing file
+	if ConfigFileExists("/no/such/file.yml") {
+		t.Error("/no/such/file.yml should not exist")
 	}
 }

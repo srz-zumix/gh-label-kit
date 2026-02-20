@@ -34,6 +34,7 @@ func NewLabelerCmd() *cobra.Command {
 	var ref string
 	var reviewRequest string
 	var skipLocalConfig bool
+	var strictConfig bool
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
@@ -53,10 +54,17 @@ func NewLabelerCmd() *cobra.Command {
 
 			var cfg labeler.LabelerConfig
 			if !skipLocalConfig {
-				cfg, err = labeler.LoadConfig(configPath)
+				if labeler.ConfigFileExists(configPath) {
+					cfg, err = labeler.LoadConfig(configPath, strictConfig)
+					if err != nil {
+						// If local config exists but failed to load, return error immediately
+						// Don't fallback to remote config in this case
+						return fmt.Errorf("failed to load local config: %w", err)
+					}
+				}
 			}
-			// Load config from repository if local config is skipped or failed to load
-			if skipLocalConfig || err != nil {
+			// Load config from repository if local config is skipped or doesn't exist
+			if cfg == nil {
 				if ref == "" {
 					ref = os.Getenv("GITHUB_SHA")
 				}
@@ -73,8 +81,10 @@ func NewLabelerCmd() *cobra.Command {
 							if err != nil {
 								return fmt.Errorf("failed to get PR %s to resolve ref: %w", args[0], err)
 							}
-							ref = pr.GetHead().GetRef()
-							logger.Info("Using PR head branch as ref", "pr", args[0], "ref", ref)
+							if pr != nil && pr.GetHead() != nil && pr.GetHead().GetRef() != "" {
+								ref = pr.GetHead().GetRef()
+								logger.Info("Using PR head branch as ref", "pr", args[0], "ref", ref)
+							}
 						}
 					}
 				}
@@ -85,7 +95,7 @@ func NewLabelerCmd() *cobra.Command {
 					contentPaths.Path = &defaultConfigPath
 				}
 
-				cfg, err = labeler.LoadConfigFromRepo(ctx, client, *contentPaths.Repo, *contentPaths.Path, contentPaths.Ref)
+				cfg, err = labeler.LoadConfigFromRepo(ctx, client, *contentPaths.Repo, *contentPaths.Path, contentPaths.Ref, strictConfig)
 				if err != nil {
 					return fmt.Errorf("failed to load config from repository: %w", err)
 				}
@@ -171,6 +181,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.BoolVarP(&dryrun, "dryrun", "n", false, "Dry run: do not actually set labels")
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
 	f.BoolVar(&skipLocalConfig, "skip-local-config", false, "Skip loading config from local file and load from repository instead")
+	f.BoolVar(&strictConfig, "strict", false, "Treat unknown fields in config as errors instead of warnings")
 	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Control review request behavior based on CODEOWNERS when labels are applied")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
