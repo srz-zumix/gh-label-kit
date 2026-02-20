@@ -2,6 +2,7 @@ package labeler
 
 import (
 	"github.com/google/go-github/v79/github"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 func matchChangedFilesAny(rules []ChangedFilesRule, changedFiles []*github.CommitFile) bool {
@@ -28,10 +29,12 @@ func matchAnyGlobToAnyFile(patterns []string, changedFiles []*github.CommitFile)
 	for _, pattern := range patterns {
 		for _, f := range changedFiles {
 			if f.Filename != nil && matchGlob(pattern, *f.Filename) {
+				logger.Debug("Glob matched (any-glob-to-any-file)", "pattern", pattern, "file", *f.Filename)
 				return true
 			}
 		}
 	}
+	logger.Debug("No glob matched (any-glob-to-any-file)", "patterns", patterns, "filesCount", len(changedFiles))
 	return false
 }
 

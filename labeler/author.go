@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 // AuthorMatcher handles author matching logic including team membership checks
@@ -40,11 +41,14 @@ func (m *AuthorMatcher) MatchAuthor(patterns []string, pr *github.PullRequest) b
 		return false
 	}
 
+	logger.Debug("Checking author patterns", "author", author, "patterns", patterns)
 	for _, pattern := range patterns {
 		if m.matchPattern(pattern, author) {
+			logger.Debug("Author pattern matched", "author", author, "pattern", pattern)
 			return true
 		}
 	}
+	logger.Debug("No author pattern matched", "author", author, "patterns", patterns)
 	return false
 }
 
@@ -83,10 +87,12 @@ func (m *AuthorMatcher) matchTeam(teamRef, author string) bool {
 
 	cacheKey := teamRef + ":" + author
 	if cached, ok := m.teamMembershipCache[cacheKey]; ok {
+		logger.Debug("Team membership cache hit", "team", teamRef, "author", author, "isMember", cached)
 		return cached
 	}
 
 	isMember := m.checkTeamMembership(org, teamSlug, author)
+	logger.Debug("Team membership checked", "team", teamRef, "author", author, "isMember", isMember)
 	m.teamMembershipCache[cacheKey] = isMember
 	return isMember
 }

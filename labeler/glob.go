@@ -2,6 +2,7 @@ package labeler
 
 import (
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 	"github.com/srz-zumix/go-gh-extension/pkg/parser"
 )
 
@@ -12,7 +13,9 @@ func isExtglobEnabled() bool {
 func matchGlob(pattern, filename string) bool {
 	// Check if the pattern contains any extglob patterns
 	if isExtglobEnabled() && containsExtglob(pattern) {
-		return matchComplexGlob(pattern, filename)
+		result := matchComplexGlob(pattern, filename)
+		logger.Debug("Extglob pattern match", "pattern", pattern, "filename", filename, "matched", result)
+		return result
 	}
 
 	// Check for negation pattern (! at the beginning) only when extglob is enabled
@@ -28,7 +31,8 @@ func matchGlob(pattern, filename string) bool {
 
 	// Invert the result if negation is enabled
 	if negate {
-		return !result
+		result = !result
 	}
+	logger.Debug("Glob pattern match", "pattern", pattern, "filename", filename, "negate", negate, "matched", result)
 	return result
 }
