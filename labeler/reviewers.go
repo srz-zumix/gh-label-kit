@@ -164,10 +164,10 @@ func (c *LabeledCodeOwners) GetReviewers(labels []string) []string {
 		}
 		logger.Debug("Removed existing reviewers", "reviewersCount", len(reviewers.Users))
 	}
-	reviewed_reviewers, err := gh.GetPullRequestLatestReviews(c.ctx, c.g, c.repo, c.pr)
+	reviewedReviewers, err := gh.GetPullRequestLatestReviews(c.ctx, c.g, c.repo, c.pr)
 	if err == nil {
 		removedCount := 0
-		for _, r := range reviewed_reviewers {
+		for _, r := range reviewedReviewers {
 			if r.GetCommitID() == c.pr.GetHead().GetSHA() {
 				delete(codeowners, r.GetUser().GetLogin())
 				removedCount++
