@@ -1,6 +1,7 @@
 package labeler
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -475,9 +476,17 @@ label-b:
 }
 
 func TestConfigFileExists(t *testing.T) {
+	// Create a temp file to test with
+	dir := t.TempDir()
+	tmpFile, err := os.CreateTemp(dir, "config-*.yml")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpFile.Close()
+
 	// Test existing file
-	if !ConfigFileExists("load_test.go") {
-		t.Error("load_test.go should exist")
+	if !ConfigFileExists(tmpFile.Name()) {
+		t.Errorf("%s should exist", tmpFile.Name())
 	}
 
 	// Test non-existing file
