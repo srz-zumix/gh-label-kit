@@ -26,7 +26,7 @@ func isNoHiddenEnabled() bool {
 	return noHiddenEnabled
 }
 
-// isHiddenFile checks if the filename contains any hidden components (starting with .)
+// isHiddenFile checks if the file path contains any hidden components (any path segment starting with .)
 func isHiddenFile(filename string) bool {
 	// Empty filename is not hidden
 	if filename == "" {
