@@ -272,8 +272,7 @@ func matchComplexGlob(pattern, filename string) bool {
 			if containsExtglob(p) {
 				matched = matchComplexGlob(p, filename)
 			} else {
-				m, err := doublestar.PathMatch(p, filename)
-				matched = err == nil && m
+				matched = matchGlobDoublestar(p, filename)
 			}
 			if matched {
 				return false // Matches a negated pattern, so should not match overall
@@ -304,8 +303,7 @@ func matchComplexGlob(pattern, filename string) bool {
 				}
 			}
 		} else {
-			m, err := doublestar.PathMatch(generalPattern, filename)
-			matched = err == nil && m
+			matched = matchGlobDoublestar(generalPattern, filename)
 		}
 
 		if matched {
@@ -327,8 +325,7 @@ func matchComplexGlob(pattern, filename string) bool {
 	}
 
 	// Fallback to regular doublestar matching
-	matched, err := doublestar.PathMatch(pattern, filename)
-	return err == nil && matched
+	return matchGlobDoublestar(pattern, filename)
 }
 
 // matchExtglob matches a filename against an extended glob pattern with recursive support
@@ -479,6 +476,10 @@ func convertExtglobContentToRegex(pattern string) string {
 
 // matchGlobDoublestar is the original glob matching using doublestar
 func matchGlobDoublestar(pattern, filename string) bool {
+	// Exclude hidden files if no-hidden option is enabled
+	if isNoHiddenEnabled() && isHiddenFile(filename) {
+		return false
+	}
 	matched, err := doublestar.PathMatch(pattern, filename)
 	return err == nil && matched
 }

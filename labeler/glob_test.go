@@ -147,3 +147,79 @@ func TestMatchGlob_NegationGlob(t *testing.T) {
 		}
 	}
 }
+
+func TestIsHiddenFile(t *testing.T) {
+	cases := []struct {
+		filename string
+		want     bool
+	}{
+		// Hidden files (starting with .)
+		{".hidden", true},
+		{".gitignore", true},
+		{".github/workflows/test.yml", true},
+		{"dir/.hidden", true},
+		{"dir/.config/file.txt", true},
+		{"a/b/.c/d.txt", true},
+
+		// Visible files
+		{"visible.txt", false},
+		{"file.go", false},
+		{"src/main.go", false},
+		{"docs/readme.md", false},
+		{"a/b/c/d.txt", false},
+
+		// Edge cases
+		{"", false},
+		{".", true},
+		{"..", true},
+		{"...", true},
+		{"...visible", true},
+		{"visible.", false},
+		{"dir/file.", false},
+	}
+
+	for _, c := range cases {
+		if got := isHiddenFile(c.filename); got != c.want {
+			t.Errorf("isHiddenFile(%q) = %v, want %v", c.filename, got, c.want)
+		}
+	}
+}
+
+func TestMatchGlob_NoHidden(t *testing.T) {
+	// Save original state
+	original := noHiddenEnabled
+	defer func() {
+		noHiddenEnabled = original
+	}()
+
+	cases := []struct {
+		pattern, filename string
+		noHidden          bool
+		want              bool
+	}{
+		// Without no-hidden option
+		{"**/*.go", "main.go", false, true},
+		{"**/*.go", ".hidden.go", false, true},
+		{"**/*.yml", ".github/workflows/test.yml", false, true},
+		{"**/*", "dir/.config/file.txt", false, true},
+
+		// With no-hidden option
+		{"**/*.go", "main.go", true, true},
+		{"**/*.go", ".hidden.go", true, false},
+		{"**/*.yml", ".github/workflows/test.yml", true, false},
+		{"**/*", "dir/.config/file.txt", true, false},
+		{"**/*", "visible/file.txt", true, true},
+		{"src/**/*.go", "src/main.go", true, true},
+		{"src/**/*.go", "src/.hidden.go", true, false},
+		{"src/**/*.go", "src/pkg/file.go", true, true},
+		{"src/**/*.go", "src/.internal/file.go", true, false},
+	}
+
+	for _, c := range cases {
+		SetNoHidden(c.noHidden)
+		if got := matchGlob(c.pattern, c.filename); got != c.want {
+			t.Errorf("matchGlob(%q, %q) with noHidden=%v = %v, want %v",
+				c.pattern, c.filename, c.noHidden, got, c.want)
+		}
+	}
+}

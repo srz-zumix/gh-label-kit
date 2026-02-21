@@ -45,7 +45,7 @@ gh label-kit --read-only <command>
 ### labeler: Auto-label PRs
 
 ```sh
-gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>] [--name-only] [--ref <string>] [--skip-local-config] [--strict]
+gh label-kit labeler <pr-number...> [--repo <owner/repo>] [--config <path>] [--sync] [--dryrun] [--color <auto|always|never>] [--format <json>] [--jq <expression>] [--template <string>] [--name-only] [--no-hidden] [--ref <string>] [--skip-local-config] [--strict]
 ```
 
 Automatically add or remove labels to GitHub Pull Requests based on changed files, branch name, PR author, and a YAML config file (default: .github/labeler.yml).
@@ -60,6 +60,7 @@ Supports glob/regex patterns, extended glob patterns (extglob), author matching 
 - --format: Output format (json)
 - --jq: Filter JSON output using a jq expression
 - --name-only: Output only team names
+- --no-hidden: Exclude hidden files (files starting with .) from glob matching
 - --ref: Git reference (branch, tag, or commit SHA) to load config from repository
 - --repo/-R: Target repository in the format 'owner/repo'
 - --skip-local-config: Skip loading config from local file and load from repository instead
