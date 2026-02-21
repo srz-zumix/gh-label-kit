@@ -35,6 +35,7 @@ func NewLabelerCmd() *cobra.Command {
 	var reviewRequest string
 	var skipLocalConfig bool
 	var strictConfig bool
+	var noHidden bool
 	cmd := &cobra.Command{
 		Use:   "labeler <pr-number...>",
 		Short: "Automatically label PRs based on changed files and branch name using config file",
@@ -45,6 +46,9 @@ func NewLabelerCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error parsing repository: %w", err)
 			}
+
+			// Set no-hidden option for glob matching
+			labeler.SetNoHidden(noHidden)
 
 			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(repository)
@@ -182,6 +186,7 @@ func NewLabelerCmd() *cobra.Command {
 	f.StringVar(&ref, "ref", "", "Git reference (branch, tag, or commit SHA) to load config from repository")
 	f.BoolVar(&skipLocalConfig, "skip-local-config", false, "Skip loading config from local file and load from repository instead")
 	f.BoolVar(&strictConfig, "strict", false, "Treat unknown fields in config as errors instead of warnings")
+	f.BoolVar(&noHidden, "no-hidden", false, "Exclude hidden files (files starting with .) from glob matching")
 	cmdutil.StringEnumFlag(cmd, &reviewRequest, "review-request", "", labeler.ReviewRequestModeAddTo, labeler.ReviewersRequestModes, "Control review request behavior based on CODEOWNERS when labels are applied")
 	cmdutil.AddFormatFlags(cmd, &opts.Exporter)
 
