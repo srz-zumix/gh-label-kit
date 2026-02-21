@@ -32,7 +32,6 @@ func isHiddenFile(filename string) bool {
 	if filename == "" {
 		return false
 	}
-	
 	// Split the path into components and check each one
 	parts := strings.Split(filepath.ToSlash(filepath.Clean(filename)), "/")
 	for _, part := range parts {
