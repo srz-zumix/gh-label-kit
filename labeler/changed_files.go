@@ -58,19 +58,23 @@ func matchAnyGlobToAllFiles(patterns []string, changedFiles []*github.CommitFile
 }
 
 func matchAllGlobsToAnyFile(patterns []string, changedFiles []*github.CommitFile) bool {
-	for _, pattern := range patterns {
-		found := false
-		for _, f := range changedFiles {
-			if f.Filename != nil && matchGlob(pattern, *f.Filename) {
-				found = true
+	// Check if there exists any single file that matches ALL of the glob patterns
+	for _, f := range changedFiles {
+		if f.Filename == nil {
+			continue
+		}
+		allMatch := true
+		for _, pattern := range patterns {
+			if !matchGlob(pattern, *f.Filename) {
+				allMatch = false
 				break
 			}
 		}
-		if !found {
-			return false
+		if allMatch {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func matchAllGlobsToAllFiles(patterns []string, changedFiles []*github.CommitFile) bool {
