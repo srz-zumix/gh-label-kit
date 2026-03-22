@@ -9,15 +9,15 @@ import (
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
-func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *PullRequest, allLebels []string, cfg LabelerConfig) ([]*Label, error) {
-	logger.Debug("Setting labels for PR", "pr", pr.GetNumber(), "labels", allLebels, "count", len(allLebels))
+func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *PullRequest, allLabels []string, cfg LabelerConfig) ([]*Label, error) {
+	logger.Debug("Setting labels for PR", "pr", pr.GetNumber(), "labels", allLabels, "count", len(allLabels))
 	var excessLabels []string
-	if len(allLebels) > 100 {
-		excessLabels = allLebels[100:]
-		allLebels = allLebels[:100]
+	if len(allLabels) > 100 {
+		excessLabels = allLabels[100:]
+		allLabels = allLabels[:100]
 		logger.Debug("Label count exceeds limit, truncating", "pr", pr.GetNumber(), "limit", 100, "excess", excessLabels)
 	}
-	labels, err := gh.SetPullRequestLabels(ctx, g, repo, pr, allLebels)
+	labels, err := gh.SetPullRequestLabels(ctx, g, repo, pr, allLabels)
 	if err != nil {
 		logger.Debug("Failed to set PR labels", "pr", pr.GetNumber(), "error", err)
 		return nil, err
