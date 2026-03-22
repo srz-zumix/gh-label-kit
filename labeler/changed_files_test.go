@@ -7,7 +7,7 @@ import (
 )
 
 func TestMatchChangedFilesRule(t *testing.T) {
-	files := []*github.CommitFile{
+	files := []*CommitFile{
 		{Filename: github.Ptr("main.go")},
 		{Filename: github.Ptr("docs/readme.md")},
 	}
@@ -45,7 +45,7 @@ func TestMatchChangedFilesRule(t *testing.T) {
 }
 
 func TestCheckAllChangedFiles(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -72,7 +72,7 @@ func TestCheckAllChangedFiles(t *testing.T) {
 }
 
 func TestCheckAnyChangedFiles(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -97,7 +97,7 @@ func TestCheckAnyChangedFiles(t *testing.T) {
 }
 
 func TestMatchChangedFilesRule_AllGlobsMatchAnyFile(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -112,7 +112,7 @@ func TestMatchChangedFilesRule_AllGlobsMatchAnyFile(t *testing.T) {
 }
 
 func TestMatchChangedFilesRule_AnyGlobMatchesAllFiles(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -127,7 +127,7 @@ func TestMatchChangedFilesRule_AnyGlobMatchesAllFiles(t *testing.T) {
 }
 
 func TestMatchChangedFilesRule_AllGlobsMatchAllFiles(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -142,7 +142,7 @@ func TestMatchChangedFilesRule_AllGlobsMatchAllFiles(t *testing.T) {
 }
 
 func TestMatchChangedFilesRule_AllFilesToAnyGlob(t *testing.T) {
-	changedFiles := []*github.CommitFile{
+	changedFiles := []*CommitFile{
 		{Filename: github.Ptr("foo.txt")},
 		{Filename: github.Ptr("bar.txt")},
 	}
@@ -167,11 +167,12 @@ func TestMatchChangedFilesRule_AllFilesToAnyGlob(t *testing.T) {
 // to ensure each function has distinct and correct semantics.
 //
 // Semantics:
-//   matchAnyGlobToAnyFile:  ∃glob ∃file: match(glob, file)
-//   matchAnyGlobToAllFiles: ∃glob ∀file: match(glob, file)
-//   matchAllGlobsToAnyFile: ∃file ∀glob: match(glob, file)
-//   matchAllGlobsToAllFiles: ∀glob ∀file: match(glob, file)
-//   matchAllFilesToAnyGlob: ∀file ∃glob: match(glob, file)
+//
+//	matchAnyGlobToAnyFile:  ∃glob ∃file: match(glob, file)
+//	matchAnyGlobToAllFiles: ∃glob ∀file: match(glob, file)
+//	matchAllGlobsToAnyFile: ∃file ∀glob: match(glob, file)
+//	matchAllGlobsToAllFiles: ∀glob ∀file: match(glob, file)
+//	matchAllFilesToAnyGlob: ∀file ∃glob: match(glob, file)
 func TestMatchFunctions_Comprehensive(t *testing.T) {
 	tests := []struct {
 		name                   string
@@ -247,7 +248,7 @@ func TestMatchFunctions_Comprehensive(t *testing.T) {
 			wantAnyGlobToAllFiles:  true,  // *.go matches all files
 			wantAllGlobsToAnyFile:  false, // no file matches both *.go AND *.md
 			wantAllGlobsToAllFiles: false,
-			wantAllFilesToAnyGlob:  true,  // main.go→*.go ✓, test.go→*.go ✓ (each file needs at least one)
+			wantAllFilesToAnyGlob:  true, // main.go→*.go ✓, test.go→*.go ✓ (each file needs at least one)
 		},
 		{
 			// Three files, three globs, each glob matches a different file
@@ -308,9 +309,9 @@ func TestMatchFunctions_Comprehensive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			changedFiles := make([]*github.CommitFile, len(tt.files))
+			changedFiles := make([]*CommitFile, len(tt.files))
 			for i, f := range tt.files {
-				changedFiles[i] = &github.CommitFile{Filename: github.Ptr(f)}
+				changedFiles[i] = &CommitFile{Filename: github.Ptr(f)}
 			}
 
 			if got := matchAnyGlobToAnyFile(tt.patterns, changedFiles); got != tt.wantAnyGlobToAnyFile {

@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -30,18 +29,17 @@ func NewRunnerListCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error parsing repository: %w", err)
 			}
-			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(r)
 			if err != nil {
 				return fmt.Errorf("error creating GitHub client: %w", err)
 			}
+			ctx := cmd.Context()
 			runners, err := gh.ListRunners(ctx, client, r)
 			if err != nil {
 				return fmt.Errorf("failed to list runner labels: %w", err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
-			renderer.RenderRunnersDefault(runners)
-			return nil
+			return renderer.RenderRunners(runners, nil)
 		},
 	}
 

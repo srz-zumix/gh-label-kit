@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -57,7 +56,7 @@ func NewSearchCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 
-			ctx := context.Background()
+			ctx := cmd.Context()
 			issues, err := gh.SearchIssues(ctx, client, repository, query)
 			if err != nil {
 				return fmt.Errorf("failed to search issues: %w", err)
@@ -65,8 +64,7 @@ func NewSearchCmd() *cobra.Command {
 
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderIssuesDefault(issues)
-			return nil
+			return renderer.RenderIssues(issues, nil)
 		},
 	}
 	f := cmd.Flags()

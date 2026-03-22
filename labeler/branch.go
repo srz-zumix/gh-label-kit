@@ -1,11 +1,10 @@
 package labeler
 
 import (
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
-func matchLabelerRuleBaseBranch(r LabelerRule, pr *github.PullRequest) bool {
+func matchLabelerRuleBaseBranch(r LabelerRule, pr *PullRequest) bool {
 	if base := r.GetBaseBranch(); len(base) > 0 {
 		for _, re := range base {
 			if matchAnyRegex([]string{re}, pr.Base.GetRef()) {
@@ -18,7 +17,7 @@ func matchLabelerRuleBaseBranch(r LabelerRule, pr *github.PullRequest) bool {
 	return false
 }
 
-func matchLabelerRuleHeadBranch(r LabelerRule, pr *github.PullRequest) bool {
+func matchLabelerRuleHeadBranch(r LabelerRule, pr *PullRequest) bool {
 	if head := r.GetHeadBranch(); len(head) > 0 {
 		for _, re := range head {
 			if matchAnyRegex([]string{re}, pr.Head.GetRef()) {

@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
-func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, allLebels []string, cfg LabelerConfig) ([]*github.Label, error) {
+func SetLabels(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *PullRequest, allLebels []string, cfg LabelerConfig) ([]*Label, error) {
 	logger.Debug("Setting labels for PR", "pr", pr.GetNumber(), "labels", allLebels, "count", len(allLebels))
 	var excessLabels []string
 	if len(allLebels) > 100 {

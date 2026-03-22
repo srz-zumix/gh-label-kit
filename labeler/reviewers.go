@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/actions"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
@@ -33,7 +32,7 @@ var ReviewersRequestModes = []string{
 	ReviewRequestModeNone,
 }
 
-func GetReviewRequestTargetLabels(pr *github.PullRequest, matchResult MatchResult, reviewRequestMode string, syncLabels bool) []string {
+func GetReviewRequestTargetLabels(pr *PullRequest, matchResult MatchResult, reviewRequestMode string, syncLabels bool) []string {
 	logger.Debug("Getting review request target labels", "pr", pr.GetNumber(), "mode", reviewRequestMode, "syncLabels", syncLabels)
 	switch reviewRequestMode {
 	case ReviewRequestModeNone, ReviewRequestModeNever:
@@ -100,11 +99,11 @@ type LabeledCodeOwners struct {
 	g    *gh.GitHubClient
 	repo repository.Repository
 	cfg  LabelerConfig
-	pr   *github.PullRequest
+	pr   *PullRequest
 	mode string
 }
 
-func NewLabeledCodeOwners(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *github.PullRequest, cfg LabelerConfig, mode string) *LabeledCodeOwners {
+func NewLabeledCodeOwners(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, pr *PullRequest, cfg LabelerConfig, mode string) *LabeledCodeOwners {
 	return &LabeledCodeOwners{
 		ctx:  ctx,
 		g:    g,
@@ -180,7 +179,7 @@ func (c *LabeledCodeOwners) GetReviewers(labels []string) []string {
 	return result
 }
 
-func (c *LabeledCodeOwners) SetReviewers(labels []string) ([]string, *github.PullRequest, error) {
+func (c *LabeledCodeOwners) SetReviewers(labels []string) ([]string, *PullRequest, error) {
 	codeowners := c.GetReviewers(labels)
 	if len(codeowners) == 0 {
 		logger.Debug("No reviewers to request", "pr", c.pr.GetNumber())

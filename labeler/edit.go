@@ -4,16 +4,15 @@ import (
 	"context"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
 
 // EditLabelsByConfig edits the given labels according to the config (color, etc). Returns the edited labels.
-func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, labels []*github.Label, config LabelerConfig) ([]*github.Label, error) {
+func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository.Repository, labels []*Label, config LabelerConfig) ([]*Label, error) {
 	logger.Debug("Editing labels by config", "labelsCount", len(labels))
-	labelMap := make(map[string]*github.Label)
-	var edited []*github.Label
+	labelMap := make(map[string]*Label)
+	var edited []*Label
 	for _, l := range labels {
 		if l == nil || l.Name == nil {
 			continue
@@ -32,11 +31,11 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 		if l, ok := labelMap[name]; ok {
 			needsUpdate := false
 			if color != "" && (l.Color == nil || *l.Color != color) {
-				l.Color = github.Ptr(color)
+				l.Color = Ptr(color)
 				needsUpdate = true
 			}
 			if description != "" && (l.Description == nil || *l.Description != description) {
-				l.Description = github.Ptr(description)
+				l.Description = Ptr(description)
 				needsUpdate = true
 			}
 			if needsUpdate {

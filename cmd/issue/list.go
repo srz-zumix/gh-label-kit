@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -34,15 +33,14 @@ func NewListCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			issue, err := gh.GetIssue(ctx, client, repository, target)
 			if err != nil {
 				return fmt.Errorf("failed to get issue %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(issue.Labels)
-			return nil
+			return renderer.RenderLabels(issue.Labels, nil)
 		},
 	}
 	f := cmd.Flags()
