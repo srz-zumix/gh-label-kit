@@ -36,7 +36,7 @@ func NewRunnerListCmd() *cobra.Command {
 			ctx := cmd.Context()
 			runners, err := gh.ListRunners(ctx, client, r)
 			if err != nil {
-				return fmt.Errorf("failed to list runner labels: %w", err)
+				return fmt.Errorf("failed to list runners: %w", err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			return renderer.RenderRunners(runners, nil)
