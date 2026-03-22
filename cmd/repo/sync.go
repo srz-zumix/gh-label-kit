@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -24,11 +23,11 @@ func NewSyncCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error parsing source repository: %w", err)
 			}
-			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(src)
 			if err != nil {
 				return fmt.Errorf("error creating GitHub client: %w", err)
 			}
+			ctx := cmd.Context()
 			for _, dstArg := range args {
 				dst, err := parser.Repository(parser.RepositoryInput(dstArg))
 				if err != nil {

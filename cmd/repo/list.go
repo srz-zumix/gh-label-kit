@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -30,19 +29,18 @@ func NewListCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("error parsing repository: %w", err)
 			}
-			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(repository)
 			if err != nil {
 				return fmt.Errorf("error creating GitHub client: %w", err)
 			}
+			ctx := cmd.Context()
 			labels, err := gh.ListLabels(ctx, client, repository)
 			if err != nil {
 				return fmt.Errorf("failed to list labels: %w", err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(labels)
-			return nil
+			return renderer.RenderLabels(labels, nil)
 		},
 	}
 

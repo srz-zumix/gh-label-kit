@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -50,7 +49,6 @@ func NewLabelerCmd() *cobra.Command {
 			// Set no-hidden option for glob matching
 			labeler.SetNoHidden(noHidden)
 
-			ctx := context.Background()
 			client, err := gh.NewGitHubClientWithRepo(repository)
 			if err != nil {
 				return fmt.Errorf("error creating GitHub client: %w", err)
@@ -67,6 +65,8 @@ func NewLabelerCmd() *cobra.Command {
 					}
 				}
 			}
+
+			ctx := cmd.Context()
 			// Load config from repository if local config is skipped or doesn't exist
 			if cfg == nil {
 				if ref == "" {
@@ -157,9 +157,15 @@ func NewLabelerCmd() *cobra.Command {
 					}
 					renderer.SetColor(colorFlag)
 					if nameOnly {
-						renderer.RenderNamesWithSeparator(labels, ",")
+						err = renderer.RenderNamesWithSeparator(labels, ",")
+						if err != nil {
+							logger.Warn("Failed to render names, falling back to labels", "pr", prNumber, "error", err)
+						}
 					} else {
-						renderer.RenderLabelsDefault(labels)
+						err = renderer.RenderLabels(labels, nil)
+						if err != nil {
+							logger.Warn("Failed to render labels, falling back to names", "pr", prNumber, "error", err)
+						}
 					}
 				}
 

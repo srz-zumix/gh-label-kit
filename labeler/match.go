@@ -5,7 +5,6 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
@@ -132,7 +131,7 @@ func (r MatchResult) DeleteTo() []string {
 }
 
 // CheckMatchConfigs checks all label configs against the PR and returns matched/unmatched labels
-func (m *Matcher) CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.CommitFile, pr *github.PullRequest) MatchResult {
+func (m *Matcher) CheckMatchConfigs(cfg LabelerConfig, changedFiles []*CommitFile, pr *PullRequest) MatchResult {
 	logger.Debug("Starting label matching", "pr", pr.GetNumber(), "changedFiles", len(changedFiles), "configLabels", len(cfg))
 	result := MatchResult{
 		Current:   []string{},
@@ -171,7 +170,7 @@ func (m *Matcher) CheckMatchConfigs(cfg LabelerConfig, changedFiles []*github.Co
 }
 
 // matchLabelerMatch checks if a PR matches a label's match object (any/all/changed-files/branch/author)
-func (m *Matcher) matchLabelerMatch(match LabelerMatch, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerMatch(match LabelerMatch, changedFiles []*CommitFile, pr *PullRequest) bool {
 	if len(match.All) > 0 {
 		if !m.matchLabelerMatchAll(match.All, changedFiles, pr) {
 			return false
@@ -185,7 +184,7 @@ func (m *Matcher) matchLabelerMatch(match LabelerMatch, changedFiles []*github.C
 	return true
 }
 
-func (m *Matcher) matchLabelerMatchAny(rules []LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerMatchAny(rules []LabelerRule, changedFiles []*CommitFile, pr *PullRequest) bool {
 	for _, rule := range rules {
 		if m.matchLabelerRuleAny(rule, changedFiles, pr) {
 			return true
@@ -194,7 +193,7 @@ func (m *Matcher) matchLabelerMatchAny(rules []LabelerRule, changedFiles []*gith
 	return false
 }
 
-func (m *Matcher) matchLabelerMatchAll(rules []LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerMatchAll(rules []LabelerRule, changedFiles []*CommitFile, pr *PullRequest) bool {
 	for _, rule := range rules {
 		if !m.matchLabelerRuleAll(rule, changedFiles, pr) {
 			return false
@@ -203,7 +202,7 @@ func (m *Matcher) matchLabelerMatchAll(rules []LabelerRule, changedFiles []*gith
 	return true
 }
 
-func (m *Matcher) matchLabelerRuleAny(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerRuleAny(r LabelerRule, changedFiles []*CommitFile, pr *PullRequest) bool {
 	if r.BaseBranch != nil {
 		if matchLabelerRuleBaseBranch(r, pr) {
 			logger.Debug("BaseBranch rule matched (any)", "pr", pr.GetNumber(), "baseBranch", pr.Base.GetRef())
@@ -232,7 +231,7 @@ func (m *Matcher) matchLabelerRuleAny(r LabelerRule, changedFiles []*github.Comm
 	return false
 }
 
-func (m *Matcher) matchLabelerRuleAll(r LabelerRule, changedFiles []*github.CommitFile, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerRuleAll(r LabelerRule, changedFiles []*CommitFile, pr *PullRequest) bool {
 	if r.BaseBranch != nil {
 		if !matchLabelerRuleBaseBranch(r, pr) {
 			logger.Debug("BaseBranch rule not matched (all)", "pr", pr.GetNumber(), "baseBranch", pr.Base.GetRef())
@@ -262,7 +261,7 @@ func (m *Matcher) matchLabelerRuleAll(r LabelerRule, changedFiles []*github.Comm
 }
 
 // matchLabelerRuleAuthor checks if the PR author matches the rule's author patterns
-func (m *Matcher) matchLabelerRuleAuthor(r LabelerRule, pr *github.PullRequest) bool {
+func (m *Matcher) matchLabelerRuleAuthor(r LabelerRule, pr *PullRequest) bool {
 	authors := r.GetAuthor()
 	if len(authors) == 0 {
 		return false

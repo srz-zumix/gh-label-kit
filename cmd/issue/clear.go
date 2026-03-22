@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -27,7 +26,7 @@ func NewClearCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			err = gh.ClearIssueLabels(ctx, client, repository, target)
 			if err != nil {
 				return fmt.Errorf("failed to clear labels from issue %s: %w", target, err)

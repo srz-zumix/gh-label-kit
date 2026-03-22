@@ -1,7 +1,6 @@
 package issue
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -35,7 +34,7 @@ func NewAddCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			labels, err := gh.AddIssueLabels(ctx, client, repository, target, addLabels)
 			if err != nil {
 				return fmt.Errorf("failed to add labels to issue %s: %w", target, err)
@@ -43,8 +42,7 @@ func NewAddCmd() *cobra.Command {
 
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(labels)
-			return nil
+			return renderer.RenderLabels(labels, nil)
 		},
 	}
 	f := cmd.Flags()

@@ -1,7 +1,6 @@
 package discussion
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cli/cli/v2/pkg/cmdutil"
@@ -35,15 +34,14 @@ func NewSetCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			result, err := gh.SetDiscussionLabels(ctx, client, repository, target, labels)
 			if err != nil {
 				return fmt.Errorf("failed to set labels for discussion %s: %w", target, err)
 			}
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderLabelsDefault(result)
-			return nil
+			return renderer.RenderLabels(result, nil)
 		},
 	}
 	f := cmd.Flags()

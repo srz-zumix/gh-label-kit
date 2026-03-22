@@ -3,8 +3,6 @@ package labeler
 import (
 	"context"
 	"testing"
-
-	"github.com/google/go-github/v79/github"
 )
 
 func TestCheckMatchConfigs_BranchAndFiles_Any(t *testing.T) {
@@ -37,12 +35,12 @@ func TestCheckMatchConfigs_BranchAndFiles_Any(t *testing.T) {
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	files := []*CommitFile{{Filename: Ptr("glob")}}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if !result.IsMatched("label1") {
@@ -80,12 +78,12 @@ func TestCheckMatchConfigs_BranchAndFiles_AnyArray(t *testing.T) {
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	files := []*CommitFile{{Filename: Ptr("glob")}}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
@@ -113,14 +111,14 @@ func TestCheckMatchConfigs_AllFilesToAnyGlob(t *testing.T) {
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{
-		{Filename: github.Ptr(".github/workflows/test.yml")},
-		{Filename: github.Ptr("zizmor.yml")},
+	files := []*CommitFile{
+		{Filename: Ptr(".github/workflows/test.yml")},
+		{Filename: Ptr("zizmor.yml")},
 	}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
@@ -150,12 +148,12 @@ func TestCheckMatchConfigs_BranchAndFiles_All(t *testing.T) {
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	files := []*CommitFile{{Filename: Ptr("glob")}}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
@@ -172,12 +170,12 @@ func TestCheckMatchConfigs_BranchAndFiles_ColorOnly(t *testing.T) {
 			Color: "ff0000",
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	files := []*CommitFile{{Filename: Ptr("glob")}}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
@@ -191,12 +189,12 @@ func TestCheckMatchConfigs_BranchAndFiles_DescriptionOnly(t *testing.T) {
 			Description: "Test label description",
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("base-branch")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("head-branch")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("base-branch")},
+		Head:   &PullRequestBranch{Ref: Ptr("head-branch")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr("glob")}}
+	files := []*CommitFile{{Filename: Ptr("glob")}}
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
 	if result.IsMatched("label1") {
@@ -212,12 +210,12 @@ func TestCheckMatchConfigs_RegexAndDotOption(t *testing.T) {
 			},
 		},
 	}
-	pr := &github.PullRequest{
-		Base:   &github.PullRequestBranch{Ref: github.Ptr("main")},
-		Head:   &github.PullRequestBranch{Ref: github.Ptr("feature/abc")},
-		Labels: []*github.Label{},
+	pr := &PullRequest{
+		Base:   &PullRequestBranch{Ref: Ptr("main")},
+		Head:   &PullRequestBranch{Ref: Ptr("feature/abc")},
+		Labels: []*Label{},
 	}
-	files := []*github.CommitFile{{Filename: github.Ptr(".foo.txt")}}
+	files := []*CommitFile{{Filename: Ptr(".foo.txt")}}
 	// matchGlob uses doublestar, which matches dotfiles by default
 	matcher := NewMatcher(context.TODO(), nil)
 	result := matcher.CheckMatchConfigs(cfg, files, pr)
@@ -279,9 +277,9 @@ func TestCheckMatchConfigs_MultipleBranchPatternsInAny(t *testing.T) {
 			expectMatched: []string{"multi-head-or", "multi-base-or", "multi-both-or"},
 		},
 		{
-			name:          "head matches third pattern (hotfix), base matches main",
-			headRef:       "hotfix/urgent",
-			baseRef:       "main",
+			name:    "head matches third pattern (hotfix), base matches main",
+			headRef: "hotfix/urgent",
+			baseRef: "main",
 			// multi-both-or matches because base=main matches BaseBranch patterns
 			expectMatched: []string{"multi-head-or", "multi-base-or", "multi-both-or"},
 		},
@@ -292,23 +290,23 @@ func TestCheckMatchConfigs_MultipleBranchPatternsInAny(t *testing.T) {
 			expectMatched: []string{"multi-head-or", "multi-base-or", "multi-both-or"},
 		},
 		{
-			name:          "base matches release pattern, head matches feature",
-			headRef:       "feature/abc",
-			baseRef:       "release/v1.0",
+			name:    "base matches release pattern, head matches feature",
+			headRef: "feature/abc",
+			baseRef: "release/v1.0",
 			// multi-both-or matches because head=feature/abc matches HeadBranch patterns
 			expectMatched: []string{"multi-head-or", "multi-base-or", "multi-both-or"},
 		},
 		{
-			name:          "no head match, but base matches main",
-			headRef:       "chore/cleanup",
-			baseRef:       "main",
+			name:    "no head match, but base matches main",
+			headRef: "chore/cleanup",
+			baseRef: "main",
 			// multi-both-or matches because base=main matches BaseBranch patterns
 			expectMatched: []string{"multi-base-or", "multi-both-or"},
 		},
 		{
-			name:          "head matches feature, but no base match",
-			headRef:       "feature/test",
-			baseRef:       "staging",
+			name:    "head matches feature, but no base match",
+			headRef: "feature/test",
+			baseRef: "staging",
 			// multi-both-or matches because head=feature/test matches HeadBranch patterns
 			expectMatched: []string{"multi-head-or", "multi-both-or"},
 		},
@@ -322,12 +320,12 @@ func TestCheckMatchConfigs_MultipleBranchPatternsInAny(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pr := &github.PullRequest{
-				Base:   &github.PullRequestBranch{Ref: github.Ptr(tt.baseRef)},
-				Head:   &github.PullRequestBranch{Ref: github.Ptr(tt.headRef)},
-				Labels: []*github.Label{},
+			pr := &PullRequest{
+				Base:   &PullRequestBranch{Ref: Ptr(tt.baseRef)},
+				Head:   &PullRequestBranch{Ref: Ptr(tt.headRef)},
+				Labels: []*Label{},
 			}
-			files := []*github.CommitFile{}
+			files := []*CommitFile{}
 			matcher := NewMatcher(context.TODO(), nil)
 			result := matcher.CheckMatchConfigs(cfg, files, pr)
 
@@ -402,12 +400,12 @@ func TestCheckMatchConfigs_MultipleBranchPatternsInAll(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pr := &github.PullRequest{
-				Base:   &github.PullRequestBranch{Ref: github.Ptr(tt.baseRef)},
-				Head:   &github.PullRequestBranch{Ref: github.Ptr(tt.headRef)},
-				Labels: []*github.Label{},
+			pr := &PullRequest{
+				Base:   &PullRequestBranch{Ref: Ptr(tt.baseRef)},
+				Head:   &PullRequestBranch{Ref: Ptr(tt.headRef)},
+				Labels: []*Label{},
 			}
-			files := []*github.CommitFile{}
+			files := []*CommitFile{}
 			matcher := NewMatcher(context.TODO(), nil)
 			result := matcher.CheckMatchConfigs(cfg, files, pr)
 
@@ -470,12 +468,12 @@ func TestCheckMatchConfigs_MultipleRulesInAny(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pr := &github.PullRequest{
-				Base:   &github.PullRequestBranch{Ref: github.Ptr(tt.baseRef)},
-				Head:   &github.PullRequestBranch{Ref: github.Ptr(tt.headRef)},
-				Labels: []*github.Label{},
+			pr := &PullRequest{
+				Base:   &PullRequestBranch{Ref: Ptr(tt.baseRef)},
+				Head:   &PullRequestBranch{Ref: Ptr(tt.headRef)},
+				Labels: []*Label{},
 			}
-			files := []*github.CommitFile{}
+			files := []*CommitFile{}
 			matcher := NewMatcher(context.TODO(), nil)
 			result := matcher.CheckMatchConfigs(cfg, files, pr)
 

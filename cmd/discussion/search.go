@@ -1,7 +1,6 @@
 package discussion
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -52,7 +51,7 @@ func NewSearchCmd() *cobra.Command {
 				return fmt.Errorf("failed to create GitHub client: %w", err)
 			}
 
-			ctx := context.Background()
+			ctx := cmd.Context()
 			discussions, err := gh.SearchDiscussions(ctx, client, repository, query)
 			if err != nil {
 				return fmt.Errorf("failed to search discussions: %w", err)
@@ -60,8 +59,7 @@ func NewSearchCmd() *cobra.Command {
 
 			renderer := render.NewRenderer(opts.Exporter)
 			renderer.SetColor(colorFlag)
-			renderer.RenderDiscussionsDefault(discussions)
-			return nil
+			return renderer.RenderDiscussions(discussions, nil)
 		},
 	}
 	f := cmd.Flags()

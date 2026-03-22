@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/google/go-github/v79/github"
 	"github.com/srz-zumix/go-gh-extension/pkg/gh"
 	"github.com/srz-zumix/go-gh-extension/pkg/logger"
 )
@@ -31,7 +30,7 @@ func NewAuthorMatcher(ctx context.Context, g *gh.GitHubClient) *AuthorMatcher {
 // - Regular expressions (matched against author username)
 // - @org/team-slug (matches if author is a member of the team)
 // - !@org/team-slug (matches if author is NOT a member of the team)
-func (m *AuthorMatcher) MatchAuthor(patterns []string, pr *github.PullRequest) bool {
+func (m *AuthorMatcher) MatchAuthor(patterns []string, pr *PullRequest) bool {
 	if len(patterns) == 0 {
 		return false
 	}

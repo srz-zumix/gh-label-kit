@@ -3,8 +3,6 @@ package labeler
 import (
 	"context"
 	"testing"
-
-	"github.com/google/go-github/v79/github"
 )
 
 func TestMatchLabelerRuleAuthor_RegexMatch(t *testing.T) {
@@ -93,8 +91,8 @@ func TestMatchLabelerRuleAuthor_RegexMatch(t *testing.T) {
 			rule := LabelerRule{
 				Author: tt.patterns,
 			}
-			pr := &github.PullRequest{
-				User: &github.User{Login: github.Ptr(tt.authorName)},
+			pr := &PullRequest{
+				User: &User{Login: Ptr(tt.authorName)},
 			}
 			// Use Matcher with context.TODO() and nil client to test regex-only matching
 			matcher := NewMatcher(context.TODO(), nil)
@@ -156,8 +154,8 @@ func TestAuthorMatcher_MatchAuthor_RegexOnly(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pr := &github.PullRequest{
-				User: &github.User{Login: github.Ptr(tt.authorName)},
+			pr := &PullRequest{
+				User: &User{Login: Ptr(tt.authorName)},
 			}
 			got := matcher.MatchAuthor(tt.patterns, pr)
 			if got != tt.want {
@@ -241,51 +239,51 @@ func TestCheckMatchConfigs_Author(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		authorName   string
-		headBranch   string
-		wantMatched  []string
+		name          string
+		authorName    string
+		headBranch    string
+		wantMatched   []string
 		wantUnmatched []string
 	}{
 		{
-			name:         "bot user matches bot-label",
-			authorName:   "dependabot[bot]",
-			headBranch:   "main",
-			wantMatched:  []string{"bot-label"},
+			name:          "bot user matches bot-label",
+			authorName:    "dependabot[bot]",
+			headBranch:    "main",
+			wantMatched:   []string{"bot-label"},
 			wantUnmatched: []string{"combined-label", "user-label"},
 		},
 		{
-			name:         "testuser matches user-label",
-			authorName:   "testuser",
-			headBranch:   "main",
-			wantMatched:  []string{"user-label"},
+			name:          "testuser matches user-label",
+			authorName:    "testuser",
+			headBranch:    "main",
+			wantMatched:   []string{"user-label"},
 			wantUnmatched: []string{"bot-label", "combined-label"},
 		},
 		{
-			name:         "testuser with feature branch matches combined-label and user-label",
-			authorName:   "testuser",
-			headBranch:   "feature/test",
-			wantMatched:  []string{"combined-label", "user-label"},
+			name:          "testuser with feature branch matches combined-label and user-label",
+			authorName:    "testuser",
+			headBranch:    "feature/test",
+			wantMatched:   []string{"combined-label", "user-label"},
 			wantUnmatched: []string{"bot-label"},
 		},
 		{
-			name:         "other user matches nothing",
-			authorName:   "otheruser",
-			headBranch:   "main",
-			wantMatched:  []string{},
+			name:          "other user matches nothing",
+			authorName:    "otheruser",
+			headBranch:    "main",
+			wantMatched:   []string{},
 			wantUnmatched: []string{"bot-label", "combined-label", "user-label"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pr := &github.PullRequest{
-				User:   &github.User{Login: github.Ptr(tt.authorName)},
-				Head:   &github.PullRequestBranch{Ref: github.Ptr(tt.headBranch)},
-				Base:   &github.PullRequestBranch{Ref: github.Ptr("main")},
-				Labels: []*github.Label{},
+			pr := &PullRequest{
+				User:   &User{Login: Ptr(tt.authorName)},
+				Head:   &PullRequestBranch{Ref: Ptr(tt.headBranch)},
+				Base:   &PullRequestBranch{Ref: Ptr("main")},
+				Labels: []*Label{},
 			}
-			files := []*github.CommitFile{}
+			files := []*CommitFile{}
 			matcher := NewMatcher(context.TODO(), nil)
 			result := matcher.CheckMatchConfigs(cfg, files, pr)
 
