@@ -14,10 +14,10 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 	labelMap := make(map[string]*Label)
 	var edited []*Label
 	for _, l := range labels {
-		if l == nil || l.Name == nil {
+		if l == nil {
 			continue
 		}
-		labelMap[*l.Name] = l
+		labelMap[l.Name] = l
 	}
 	for name, cfg := range config {
 		color := cfg.Color
@@ -30,8 +30,8 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 		}
 		if l, ok := labelMap[name]; ok {
 			needsUpdate := false
-			if color != "" && (l.Color == nil || *l.Color != color) {
-				l.Color = Ptr(color)
+			if color != "" && l.Color != color {
+				l.Color = color
 				needsUpdate = true
 			}
 			if description != "" && (l.Description == nil || *l.Description != description) {
@@ -40,7 +40,7 @@ func EditLabelsByConfig(ctx context.Context, g *gh.GitHubClient, repo repository
 			}
 			if needsUpdate {
 				logger.Debug("Updating label", "name", name, "color", color, "description", description)
-				result, err := gh.EditLabel(ctx, g, repo, *l.Name, l)
+				result, err := gh.EditLabel(ctx, g, repo, l.Name, l)
 				if err != nil {
 					logger.Debug("Failed to update label", "name", name, "error", err)
 					return nil, err
