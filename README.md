@@ -334,4 +334,20 @@ List all labels attached to issues and PRs in the specified milestone.
 - --repo/-R: Repository in the format 'owner/repo'
 - --template/-t: Format JSON output using a Go template
 
+---
+
+### skills: Manage bundled agent skills
+
+```sh
+gh label-kit skills list
+gh label-kit skills <install|update|reinstall|uninstall|status> [-scope <user|repo>] [-prefix <dir>] [-dry-run] [-force]
+```
+
+Install and manage the agent skills bundled with gh-label-kit.
+
+- -dry-run: Print what would happen without making changes (default: false)
+- -force: Overwrite unmanaged skills (default: false)
+- -prefix: Skill installation directory (overrides -scope)
+- -scope: Installation scope: user (`~/.agents/skills`) or repo (`<repo-root>/.agents/skills`) (default: user)
+
 [labeler]: https://github.com/actions/labeler

@@ -494,6 +494,10 @@ gh label-kit labeler 123 --config my-org/shared-config/.github/labeler.yml@main
 
 ### Auto-label in GitHub Actions
 
+This example is for pull requests from branches in the same repository. For
+pull requests from forks, the `pull_request` event receives a read-only token,
+so applying labels and requesting reviewers fails.
+
 ```yaml
 on:
   pull_request:
