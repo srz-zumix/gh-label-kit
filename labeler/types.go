@@ -1,6 +1,6 @@
 package labeler
 
-import "github.com/google/go-github/v84/github"
+import "github.com/google/go-github/v93/github"
 
 type PullRequest = github.PullRequest
 type CommitFile = github.CommitFile
