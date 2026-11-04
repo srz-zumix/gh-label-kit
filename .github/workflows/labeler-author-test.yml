@@ -16,7 +16,7 @@ jobs:
       CONFIGURATION_PATH: .github/labeler-author-test.yml
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -123,7 +123,7 @@ jobs:
       BOT_PR: 78
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
